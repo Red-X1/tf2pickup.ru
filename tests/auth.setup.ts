@@ -54,7 +54,7 @@ setup('authenticate', async ({ browser, db }) => {
         const context = await browser.newContext()
         const page = await context.newPage()
         await page.goto(`/auth/test?steamId=${steamId}`)
-        await page.waitForURL('/')
+        await page.waitForURL(/\/(6v6|9v9|ultiduo)$/)
         await page.context().storageState({ path })
       }),
   )

@@ -1,6 +1,7 @@
 import { configuration } from '../../../../configuration'
 import { Switch } from '../../../../html/components/switch'
-import { queue } from '../../../../queue-auto'
+import { queueIds } from '../../../../queue/types/queue-id'
+import { allGameClasses } from '../../../../queue-auto/all-classes'
 import { Admin } from '../../../views/html/admin'
 import { SaveButton } from '../../../views/html/save-button'
 import { GameClassSkillInput } from '../../../../html/components/game-class-skill-input'
@@ -76,69 +77,82 @@ async function MinimumTf2InGameHours() {
 async function RequirePlayerVerification() {
   const requirePlayerVerification = await configuration.get('queue.require_player_verification')
   return (
-    <div class="group flex flex-row items-center justify-between">
+    <div class="flex flex-col gap-2">
       <dl>
         <dt>
-          <label class="text-abru-light-75" for="requirePlayerVerification">
-            Require player verification
-          </label>
+          <span class="text-abru-light-75 font-bold">Require player verification</span>
         </dt>
-        <dd class="text-abru-light-75">
-          <span class="hidden group-has-checked:inline-block">
-            Players must be manually verified by an admin before they can join the queue
-          </span>
-          <span class="group-has-checked:hidden">All players can join the queue freely</span>
+        <dd class="text-abru-light-75 text-sm">
+          Players must be manually verified by an admin before they can join the queue
         </dd>
       </dl>
-
-      <Switch
-        id="requirePlayerVerification"
-        checked={requirePlayerVerification}
-        name="requirePlayerVerification"
-      />
+      <div class="flex flex-row flex-wrap gap-4">
+        {queueIds.map(queue => (
+          <div class="group flex flex-row items-center justify-between gap-4">
+            <label class="text-abru-light-75 capitalize" for={`requirePlayerVerification.${queue}`}>
+              {queue}
+            </label>
+            <Switch
+              id={`requirePlayerVerification.${queue}`}
+              checked={requirePlayerVerification[queue]}
+              name={`requirePlayerVerification.${queue}`}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
 async function PlayerSkillThreshold() {
   const playerSkillThreshold = await configuration.get('queue.player_skill_threshold')
-  const playerSkillThresholdEnabled = playerSkillThreshold !== null
 
   return (
-    <dl>
-      <dt class="group flex flex-row gap-2">
-        <label for="playerSkillThresholdEnabled">Player skill threshold</label>
-        <input
-          type="checkbox"
-          id="playerSkillThresholdEnabled"
-          name="playerSkillThresholdEnabled"
-          value="enabled"
-          checked={playerSkillThresholdEnabled}
-        />
-        <span class="hidden group-has-checked:inline-block">enabled</span>
-        <span class="group-has-checked:hidden">disabled</span>
-      </dt>
-      <dd class="flex flex-col">
-        <div>
-          <label for="playerSkillThreshold" class="sr-only">
-            Player skill threshold value
-          </label>
-          <input
-            type="number"
-            id="playerSkillThreshold"
-            name="playerSkillThreshold"
-            value={playerSkillThreshold?.toString()}
-            disabled={!playerSkillThresholdEnabled}
-            data-toggle-disabled-form="#playerRestrictionsForm"
-            data-toggle-disabled-control="playerSkillThresholdEnabled"
-            data-toggle-disabled-checked="true"
-          />
-        </div>
-        <p class="text-abru-light-75 text-sm">
+    <div class="flex flex-col gap-2">
+      <dl>
+        <dt>
+          <span class="text-abru-light-75 font-bold">Player skill threshold</span>
+        </dt>
+        <dd class="text-abru-light-75 text-sm">
           Players will be able to join queue only on classes that meet the given criteria.
-        </p>
-      </dd>
-    </dl>
+        </dd>
+      </dl>
+      <div class="flex flex-row flex-wrap gap-6">
+        {queueIds.map(queue => {
+          const enabled = playerSkillThreshold[queue] !== null
+          return (
+            <dl>
+              <dt class="group flex flex-row gap-2">
+                <label class="capitalize" for={`playerSkillThresholdEnabled.${queue}`}>
+                  {queue}
+                </label>
+                <input
+                  type="checkbox"
+                  id={`playerSkillThresholdEnabled.${queue}`}
+                  name={`playerSkillThresholdEnabled.${queue}`}
+                  value="enabled"
+                  checked={enabled}
+                />
+                <span class="hidden group-has-checked:inline-block">enabled</span>
+                <span class="group-has-checked:hidden">disabled</span>
+              </dt>
+              <dd>
+                <label for={`playerSkillThreshold.${queue}`} class="sr-only">
+                  Player skill threshold value ({queue})
+                </label>
+                <input
+                  type="number"
+                  id={`playerSkillThreshold.${queue}`}
+                  name={`playerSkillThreshold.${queue}`}
+                  value={playerSkillThreshold[queue]?.toString()}
+                  disabled={!enabled}
+                />
+              </dd>
+            </dl>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
@@ -194,7 +208,7 @@ async function SkillSuggestions() {
 async function DefaultPlayerSkill() {
   const defaultPlayerSkill = await configuration.get('games.default_player_skill')
   const skillStep = await configuration.get('games.skill_step')
-  const classes = queue.config.classes.map(({ name }) => name)
+  const classes = allGameClasses()
 
   return (
     <dl>

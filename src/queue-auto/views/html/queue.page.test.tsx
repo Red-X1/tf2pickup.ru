@@ -9,7 +9,6 @@ vi.mock('../../../database/collections', () => ({
 vi.mock('../../../environment', () => ({
   environment: {
     WEBSITE_NAME: 'tf2pickup.org',
-    QUEUE_CONFIG: '6v6',
     LOG_LEVEL: 'info',
     NODE_ENV: 'test',
   },
@@ -23,9 +22,10 @@ vi.mock('../../../events', () => ({
 }))
 
 vi.mock('../../config', () => ({
-  config: {
+  getQueueConfig: vi.fn(() => ({
     classes: [],
-  },
+    teamCount: 1,
+  })),
 }))
 
 vi.mock('@fastify/request-context', () => ({
@@ -66,21 +66,21 @@ const regularUser: User = {
 
 describe('ClearQueueButton', () => {
   it('renders the button for admins', async () => {
-    const html = await ClearQueueButton({ actor: adminUser })
+    const html = await ClearQueueButton({ queue: '6v6', actor: adminUser })
     const root = parse(html)
-    const button = root.querySelector('[hx-delete="/queue/players"]')
+    const button = root.querySelector('[hx-delete="/queue/players?queue=6v6"]')
     expect(button).not.toBeNull()
   })
 
   it('does not render for non-admins', async () => {
-    const html = await ClearQueueButton({ actor: regularUser })
+    const html = await ClearQueueButton({ queue: '6v6', actor: regularUser })
     const root = parse(html)
-    expect(root.querySelector('[hx-delete="/queue/players"]')).toBeNull()
+    expect(root.querySelector('[hx-delete="/queue/players?queue=6v6"]')).toBeNull()
   })
 
   it('does not render when there is no actor', async () => {
-    const html = await ClearQueueButton({ actor: undefined })
+    const html = await ClearQueueButton({ queue: '6v6', actor: undefined })
     const root = parse(html)
-    expect(root.querySelector('[hx-delete="/queue/players"]')).toBeNull()
+    expect(root.querySelector('[hx-delete="/queue/players?queue=6v6"]')).toBeNull()
   })
 })

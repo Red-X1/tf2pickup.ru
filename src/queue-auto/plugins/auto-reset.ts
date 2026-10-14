@@ -7,8 +7,8 @@ export default fp(
   // eslint-disable-next-line @typescript-eslint/require-await
   async () => {
     events.on('game:created', async ({ game }) => {
-      await applyMapCooldown(game.map)
-      await reset()
+      await applyMapCooldown(game.queue, game.map)
+      await reset(game.queue)
     })
   },
   {

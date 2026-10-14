@@ -13,6 +13,8 @@ import { getState } from '../../queue/get-state'
 import { QueueState } from '../../database/models/queue-state.model'
 import { preReady } from '../../pre-ready'
 import { errors } from '../../errors'
+import { queueFromUrl } from '../../queue/types/queue-url'
+import type { QueueId } from '../../queue/types/queue-id'
 import { IsInQueue } from '../views/html/is-in-queue'
 import { MapVoteSelection } from '../views/html/map-vote-selection'
 import { FlashMessage } from '../../html/components/flash-message'
@@ -37,6 +39,17 @@ export default fp(
       app.gateway
         .to({ player: actorId })
         .send(() => Promise.all(slots.map(slot => QueueSlot({ slot, actor }))))
+    }
+
+    function queueOf(socket: AppWebSocket) {
+      if (!socket.currentUrl) {
+        throw errors.badRequest('socket not bound to a queue page')
+      }
+      const queue = queueFromUrl(socket.currentUrl)
+      if (!queue) {
+        throw errors.badRequest(`not a queue page: ${socket.currentUrl}`)
+      }
+      return queue
     }
 
     function wsSafe<Args extends unknown[]>(
@@ -77,25 +90,27 @@ export default fp(
           throw errors.unauthorized('unauthorized')
         }
 
-        const slots = await join(slotId, socket.player.steamId)
+        const queue = queueOf(socket)
+        const slots = await join(queue, slotId, socket.player.steamId)
         if (slots.find(s => s.canMakeFriendsWith?.length)) {
           await refreshTakenSlots(socket.player.steamId)
         }
 
         app.gateway
           .to({ player: socket.player.steamId })
-          .send(async () => await IsInQueue({ actor: socket.player?.steamId }))
+          .send(async () => await IsInQueue({ queue, actor: socket.player?.steamId }))
       }),
     )
 
     app.gateway.on(
       'queue:leave',
-      wsSafe('leave', async socket => {
+      wsSafe('leave', async (socket, queueParam) => {
         if (!socket.player) {
           throw errors.unauthorized('unauthorized')
         }
 
-        const slot = await leave(socket.player.steamId)
+        const queue = (queueParam as QueueId | undefined) ?? queueOf(socket)
+        const slot = await leave(queue, socket.player.steamId)
         if (slot.canMakeFriendsWith?.length) {
           await refreshTakenSlots(socket.player.steamId)
         }
@@ -103,11 +118,11 @@ export default fp(
         app.gateway
           .to({ player: socket.player.steamId })
           .send(async () => [
-            await IsInQueue({ actor: socket.player?.steamId }),
+            await IsInQueue({ queue, actor: socket.player?.steamId }),
             await MapVoteSelection({ actor: socket.player?.steamId }),
           ])
 
-        const queueState = await getState()
+        const queueState = await getState(queue)
         if (queueState === QueueState.ready) {
           const close = await ReadyUpDialog.close()
           app.gateway.to({ player: socket.player.steamId }).send(() => close)
@@ -117,12 +132,16 @@ export default fp(
 
     app.gateway.on(
       'queue:readyup',
-      wsSafe('readyup', async socket => {
+      wsSafe('readyup', async (socket, queueParam) => {
         if (!socket.player) {
           throw errors.unauthorized('unauthorized')
         }
 
-        const [, close] = await Promise.all([readyUp(socket.player.steamId), ReadyUpDialog.close()])
+        const queue = (queueParam as QueueId | undefined) ?? queueOf(socket)
+        const [, close] = await Promise.all([
+          readyUp(queue, socket.player.steamId),
+          ReadyUpDialog.close(),
+        ])
         app.gateway.to({ player: socket.player.steamId }).send(() => close)
       }),
     )
@@ -134,7 +153,8 @@ export default fp(
           throw errors.unauthorized('unauthorized')
         }
 
-        await voteMap(socket.player.steamId, map)
+        const queue = queueOf(socket)
+        await voteMap(queue, socket.player.steamId, map)
         app.gateway
           .to({ player: socket.player.steamId })
           .send(async actor => await MapVoteSelection({ actor }))
@@ -148,7 +168,8 @@ export default fp(
           throw errors.unauthorized('unauthorized')
         }
 
-        await markAsFriend(socket.player.steamId, steamId)
+        const queue = queueOf(socket)
+        await markAsFriend(queue, socket.player.steamId, steamId)
       }),
     )
 
@@ -159,7 +180,8 @@ export default fp(
           throw errors.unauthorized('unauthorized')
         }
 
-        await preReady.toggle(socket.player.steamId)
+        const queue = queueOf(socket)
+        await preReady.toggle(queue, socket.player.steamId)
       }),
     )
   },

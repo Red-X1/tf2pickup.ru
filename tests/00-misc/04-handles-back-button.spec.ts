@@ -14,7 +14,7 @@ test('handle back button @6v6 @9v9', async ({ page, users }) => {
   await queuePage.goto()
   await player.goto()
 
-  await queuePage.page.getByRole('link', { name: 'Games' }).click()
+  await queuePage.page.locator('#navbar-games-link').click()
   await queuePage.page.waitForURL('/games')
 
   await player.joinQueue('scout-1')

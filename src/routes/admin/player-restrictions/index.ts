@@ -4,18 +4,29 @@ import { z } from 'zod'
 import { configuration } from '../../../configuration'
 import { requestContext } from '@fastify/request-context'
 import { routes } from '../../../utils/routes'
-import { queue } from '../../../queue-auto'
+import { queueIds } from '../../../queue/types/queue-id'
+import { allGameClasses } from '../../../queue-auto/all-classes'
+import type { QueueId } from '../../../queue/types/queue-id'
 import type { Tf2ClassName } from '../../../shared/types/tf2-class-name'
 
-const playerSkillThresholdSchema = z.discriminatedUnion('playerSkillThresholdEnabled', [
-  z.object({
-    playerSkillThresholdEnabled: z.literal(false).optional(),
-  }),
-  z.object({
-    playerSkillThresholdEnabled: z.literal('enabled'),
-    playerSkillThreshold: z.coerce.number(),
-  }),
-])
+const playerRestrictionsSchema = z.object({
+  etf2lAccountRequired: z.coerce.boolean().default(false),
+  minimumInGameHours: z.coerce.number(),
+  skillSuggestions: z.coerce.boolean().default(false),
+  skillStep: z.coerce.number().positive(),
+  'requirePlayerVerification.6v6': z.coerce.boolean().default(false),
+  'requirePlayerVerification.9v9': z.coerce.boolean().default(false),
+  'requirePlayerVerification.ultiduo': z.coerce.boolean().default(false),
+  'playerSkillThresholdEnabled.6v6': z.coerce.boolean().default(false),
+  'playerSkillThresholdEnabled.9v9': z.coerce.boolean().default(false),
+  'playerSkillThresholdEnabled.ultiduo': z.coerce.boolean().default(false),
+  'playerSkillThreshold.6v6': z.coerce.number().optional(),
+  'playerSkillThreshold.9v9': z.coerce.number().optional(),
+  'playerSkillThreshold.ultiduo': z.coerce.number().optional(),
+  ...Object.fromEntries(
+    allGameClasses().map(key => [`defaultPlayerSkill.${key}`, z.coerce.number()]),
+  ),
+})
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export default routes(async app => {
@@ -38,50 +49,41 @@ export default routes(async app => {
           authorize: [PlayerRole.admin],
         },
         schema: {
-          body: z.intersection(
-            playerSkillThresholdSchema,
-            z.object({
-              etf2lAccountRequired: z.coerce.boolean().default(false),
-              minimumInGameHours: z.coerce.number(),
-              requirePlayerVerification: z.coerce.boolean().default(false),
-              skillSuggestions: z.coerce.boolean().default(false),
-              skillStep: z.coerce.number().positive(),
-              ...queue.config.classes
-                .map(({ name }) => name)
-                .reduce<Partial<Record<`defaultPlayerSkill.${Tf2ClassName}`, z.ZodNumber>>>(
-                  (acc, key) => ({ ...acc, [`defaultPlayerSkill.${key}`]: z.coerce.number() }),
-                  {},
-                ),
-            }),
-          ),
+          body: playerRestrictionsSchema,
         },
       },
       async (request, reply) => {
-        const {
-          etf2lAccountRequired,
-          minimumInGameHours,
-          requirePlayerVerification,
-          playerSkillThresholdEnabled,
-          skillSuggestions,
-          skillStep,
-        } = request.body
-        const defaultPlayerSkill = Object.entries(request.body)
+        const { etf2lAccountRequired, minimumInGameHours, skillSuggestions, skillStep } =
+          request.body
+        const body = request.body as Record<string, unknown>
+        const defaultPlayerSkill = Object.entries(body)
           .filter(([key]) => key.startsWith('defaultPlayerSkill.'))
           .reduce<Partial<Record<Tf2ClassName, number>>>(
-            (acc, [key, value]) => ({ ...acc, [key.split('.')[1] as Tf2ClassName]: value }),
+            (acc, [key, value]) => ({
+              ...acc,
+              [key.split('.')[1] as Tf2ClassName]: value as number,
+            }),
             {},
           )
+
+        const requirePlayerVerification = Object.fromEntries(
+          queueIds.map(queue => [queue, Boolean(body[`requirePlayerVerification.${queue}`])]),
+        ) as Record<QueueId, boolean>
+        const playerSkillThreshold = Object.fromEntries(
+          queueIds.map(queue => [
+            queue,
+            body[`playerSkillThresholdEnabled.${queue}`]
+              ? ((body[`playerSkillThreshold.${queue}`] as number | undefined) ?? null)
+              : null,
+          ]),
+        ) as Record<QueueId, number | null>
 
         const actor = request.user!.player.steamId
         await Promise.all([
           configuration.set('players.etf2l_account_required', etf2lAccountRequired, actor),
           configuration.set('players.minimum_in_game_hours', minimumInGameHours, actor),
           configuration.set('queue.require_player_verification', requirePlayerVerification, actor),
-          configuration.set(
-            'queue.player_skill_threshold',
-            playerSkillThresholdEnabled ? request.body.playerSkillThreshold : null,
-            actor,
-          ),
+          configuration.set('queue.player_skill_threshold', playerSkillThreshold, actor),
           configuration.set('games.default_player_skill', defaultPlayerSkill, actor),
           configuration.set('games.skill_step', skillStep, actor),
           configuration.set('games.skill_suggestions', skillSuggestions, actor),

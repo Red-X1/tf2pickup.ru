@@ -4,7 +4,6 @@ import { configuration } from '../configuration'
 
 vi.mock('../environment', () => ({
   environment: {
-    QUEUE_CONFIG: '6v6',
     DISCORD_BOT_TOKEN: 'token',
     TF2_QUICK_SERVER_CLIENT_ID: 'id',
     TF2_QUICK_SERVER_CLIENT_SECRET: 'secret',
@@ -77,8 +76,16 @@ const values: Record<string, unknown> = {
   'games.auto_force_end_threshold': 4,
   'players.etf2l_account_required': false,
   'players.minimum_in_game_hours': 0,
-  'queue.player_skill_threshold': null,
-  'queue.require_player_verification': false,
+  'queue.player_skill_threshold': {
+    '6v6': null,
+    '9v9': null,
+    ultiduo: null,
+  },
+  'queue.require_player_verification': {
+    '6v6': false,
+    '9v9': false,
+    ultiduo: false,
+  },
   'queue.map_cooldown': 2,
   'serveme_tf.preferred_region': 'eu',
   'games.cooldown_levels': [{ level: 0, banLengthMs: 1 }],
@@ -103,14 +110,18 @@ describe('buildSnapshot', () => {
     const snapshot = await buildSnapshot()
     expect(snapshot.instanceId).toBe('deadbeef')
     expect(snapshot.version).toBe('1.2.3')
-    expect(snapshot.queueConfig).toBe('6v6')
+    expect(snapshot.queues).toEqual(['6v6', '9v9', 'ultiduo'])
   })
 
   it('reports allow-listed configuration values', async () => {
     const snapshot = await buildSnapshot()
     expect(snapshot.features['games.skill_suggestions']).toBe(true)
     expect(snapshot.features['games.voice_server_type']).toBe('mumble')
-    expect(snapshot.features['queue.player_skill_threshold']).toBeNull()
+    expect(snapshot.features['queue.player_skill_threshold']).toEqual({
+      '6v6': null,
+      '9v9': null,
+      ultiduo: null,
+    })
     expect(snapshot.features['serveme_tf.preferred_region']).toBe('eu')
   })
 

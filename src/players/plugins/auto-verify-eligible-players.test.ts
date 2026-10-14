@@ -65,7 +65,11 @@ describe('auto-verify-eligible-players', () => {
 
   describe('player:updated', () => {
     it('verifies a player with a skill assigned when verification is required', async () => {
-      vi.mocked(configuration.get).mockResolvedValue(true)
+      vi.mocked(configuration.get).mockResolvedValue({
+        '6v6': true,
+        '9v9': false,
+        ultiduo: false,
+      })
 
       await playerUpdatedHandler({
         after: {
@@ -79,7 +83,11 @@ describe('auto-verify-eligible-players', () => {
     })
 
     it('verifies a player who has played a game when verification is required', async () => {
-      vi.mocked(configuration.get).mockResolvedValue(true)
+      vi.mocked(configuration.get).mockResolvedValue({
+        '6v6': true,
+        '9v9': false,
+        ultiduo: false,
+      })
 
       await playerUpdatedHandler({
         after: {
@@ -118,7 +126,11 @@ describe('auto-verify-eligible-players', () => {
     })
 
     it('does nothing when player verification is not required', async () => {
-      vi.mocked(configuration.get).mockResolvedValue(false)
+      vi.mocked(configuration.get).mockResolvedValue({
+        '6v6': false,
+        '9v9': false,
+        ultiduo: false,
+      })
 
       await playerUpdatedHandler({
         after: {
@@ -141,7 +153,11 @@ describe('auto-verify-eligible-players', () => {
     })
 
     it('does nothing when player verification was disabled', async () => {
-      vi.mocked(configuration.get).mockResolvedValue(false)
+      vi.mocked(configuration.get).mockResolvedValue({
+        '6v6': false,
+        '9v9': false,
+        ultiduo: false,
+      })
 
       await configurationUpdatedHandler({ key: 'queue.require_player_verification' })
 
@@ -149,7 +165,11 @@ describe('auto-verify-eligible-players', () => {
     })
 
     it('bulk-verifies all eligible unverified players when player verification is enabled', async () => {
-      vi.mocked(configuration.get).mockResolvedValue(true)
+      vi.mocked(configuration.get).mockResolvedValue({
+        '6v6': true,
+        '9v9': false,
+        ultiduo: false,
+      })
 
       await configurationUpdatedHandler({ key: 'queue.require_player_verification' })
 

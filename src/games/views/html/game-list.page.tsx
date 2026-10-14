@@ -9,10 +9,12 @@ import { Pagination, paginate } from '../../../html/components/pagination'
 import { makeTitle } from '../../../html/make-title'
 import type { PickDeep } from 'type-fest'
 import type { GameModel } from '../../../database/models/game.model'
+import type { QueueId } from '../../../queue/types/queue-id'
+import { queueIds } from '../../../queue/types/queue-id'
 
 const itemsPerPage = 8
 
-export async function GameListPage(props: { page: number }) {
+export async function GameListPage(props: { page: number; queue?: QueueId | undefined }) {
   return (
     <Layout
       title={makeTitle('games')}
@@ -24,6 +26,28 @@ export async function GameListPage(props: { page: number }) {
       <Page>
         <div class="container mx-auto">
           <div class="text-abru-light-75 my-9 text-[48px] font-bold">Games</div>
+          <div class="mb-6 flex flex-row gap-2">
+            <a
+              href="/games"
+              class={[
+                'rounded-sm px-4 py-2 text-sm font-bold uppercase',
+                !props.queue ? 'bg-abru-dark-29 text-ash' : 'text-abru-light-75',
+              ]}
+            >
+              All
+            </a>
+            {queueIds.map(queue => (
+              <a
+                href={`/games?queue=${queue}`}
+                class={[
+                  'rounded-sm px-4 py-2 text-sm font-bold uppercase',
+                  props.queue === queue ? 'bg-abru-dark-29 text-ash' : 'text-abru-light-75',
+                ]}
+              >
+                {queue}
+              </a>
+            ))}
+          </div>
           <div class="contents" id="gameList">
             <GameList {...props} />
           </div>
@@ -34,14 +58,19 @@ export async function GameListPage(props: { page: number }) {
   )
 }
 
-export async function GameList(props: { page: number }) {
-  const { page } = props
-  const { last, around } = paginate(page, itemsPerPage, await collections.games.countDocuments())
+export async function GameList(props: { page: number; queue?: QueueId | undefined }) {
+  const { page, queue } = props
+  const filter = queue ? { queue } : {}
+  const { last, around } = paginate(
+    page,
+    itemsPerPage,
+    await collections.games.countDocuments(filter),
+  )
   const skip = (page - 1) * itemsPerPage
 
   const games = await collections.games
-    .find<PickDeep<GameModel, 'number' | 'state' | 'events.0' | 'score' | 'map'>>(
-      {},
+    .find<PickDeep<GameModel, 'number' | 'state' | 'events.0' | 'score' | 'map' | 'queue'>>(
+      filter,
       {
         limit: itemsPerPage,
         skip,
@@ -51,6 +80,7 @@ export async function GameList(props: { page: number }) {
           state: 1,
           score: 1,
           map: 1,
+          queue: 1,
           events: { $slice: 1 },
         },
       },
@@ -65,7 +95,7 @@ export async function GameList(props: { page: number }) {
         ))}
       </div>
       <Pagination
-        hrefFn={page => `/games?page=${page}`}
+        hrefFn={page => (queue ? `/games?queue=${queue}&page=${page}` : `/games?page=${page}`)}
         lastPage={last}
         currentPage={page}
         around={around}

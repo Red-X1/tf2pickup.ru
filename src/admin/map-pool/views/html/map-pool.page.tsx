@@ -1,15 +1,31 @@
 import { IconMinus, IconPlus } from '../../../../html/components/icons'
 import { mapPool } from '../../../../maps/pool'
+import { queueIds } from '../../../../queue/types/queue-id'
+import type { QueueId } from '../../../../queue/types/queue-id'
 import { Admin } from '../../../views/html/admin'
 import { SaveButton } from '../../../views/html/save-button'
 
-export async function MapPoolPage() {
-  const maps = await mapPool.get()
+export async function MapPoolPage({ queue }: { queue: QueueId }) {
+  const maps = await mapPool.get(queue)
 
   return (
     <Admin activePage="map-pool">
       <form action="" method="post">
+        <input type="hidden" name="queue" value={queue} />
         <div class="admin-panel-set">
+          <nav class="flex flex-row gap-2">
+            {queueIds.map(id => (
+              <a
+                href={`/admin/map-pool?queue=${id}`}
+                class="button"
+                data-variant={id === queue ? 'accent' : undefined}
+                data-size="dense"
+              >
+                {id}
+              </a>
+            ))}
+          </nav>
+
           <table class="table-auto max-lg:w-full">
             <thead>
               <tr>

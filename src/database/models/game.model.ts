@@ -1,5 +1,6 @@
 import type { GameSlotModel } from './game-slot.model'
 import type { GameCreated, GameEventModel } from './game-event.model'
+import type { QueueId } from '../../queue/types/queue-id'
 import type { Tf2Team } from '../../shared/types/tf2-team'
 
 declare const _gameNumber: unique symbol
@@ -58,6 +59,7 @@ export interface GameServer {
 
 export interface GameModel {
   number: GameNumber
+  queue: QueueId
   map: string
   state: GameState
 

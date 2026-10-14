@@ -36,7 +36,7 @@ export const launchGameServeme = mergeTests(authUsers, waitForEmptyQueue).extend
     await use(new Map<UserName, SlotId>(slots))
   },
   players: async ({ users, desiredSlots }, use) => {
-    const requiredCount = getPlayerCount()
+    const requiredCount = getPlayerCount(getQueueConfig())
     if (users.count < requiredCount) {
       throw new Error(`at least ${requiredCount} users are required to launch a game`)
     }

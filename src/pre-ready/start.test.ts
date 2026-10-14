@@ -45,9 +45,13 @@ describe('preReady.start', () => {
   })
 
   it('emits player/preReady:updated with a Date when timeout is positive', async () => {
-    vi.mocked(configuration.get).mockResolvedValue(30_000)
+    vi.mocked(configuration.get).mockResolvedValue({
+      '6v6': 30_000,
+      '9v9': 30_000,
+      ultiduo: 30_000,
+    })
 
-    await start(steamId)
+    await start('6v6', steamId)
 
     expect(events.emit).toHaveBeenCalledWith('player/preReady:updated', {
       steamId,
@@ -56,18 +60,26 @@ describe('preReady.start', () => {
   })
 
   it('schedules the expiry, replacing any previously armed one', async () => {
-    vi.mocked(configuration.get).mockResolvedValue(30_000)
+    vi.mocked(configuration.get).mockResolvedValue({
+      '6v6': 30_000,
+      '9v9': 30_000,
+      ultiduo: 30_000,
+    })
 
-    await start(steamId)
+    await start('6v6', steamId)
 
     expect(tasks.cancel).toHaveBeenCalledWith('preReady:cancel', { player: steamId })
     expect(tasks.schedule).toHaveBeenCalledWith('preReady:cancel', 30_000, { player: steamId })
   })
 
   it('does not emit player/preReady:updated when timeout is zero', async () => {
-    vi.mocked(configuration.get).mockResolvedValue(0)
+    vi.mocked(configuration.get).mockResolvedValue({
+      '6v6': 0,
+      '9v9': 0,
+      ultiduo: 0,
+    })
 
-    await start(steamId)
+    await start('6v6', steamId)
 
     expect(events.emit).not.toHaveBeenCalled()
     expect(tasks.schedule).not.toHaveBeenCalled()

@@ -29,7 +29,7 @@ test.describe('when user opens a new tab and then closes it @6v6 @9v9', () => {
 
     const queuePage = await blacklight.queuePage()
     await queuePage.goto()
-    await queuePage.page.getByRole('link', { name: 'Games' }).click({ button: 'middle' })
+    await queuePage.page.locator('#navbar-games-link').click({ button: 'middle' })
     await delay(secondsToMilliseconds(1))
 
     // player closes the second tab - should remain online

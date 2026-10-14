@@ -6,6 +6,7 @@ import type { SteamId64 } from '../shared/types/steam-id-64'
 import { assertIsError } from '../utils/assert-is-error'
 import { logger } from '../logger'
 import type { QueueSlotId } from '../queue/types/queue-slot-id'
+import { queueIds } from '../queue/types/queue-id'
 import { meter } from '../otel'
 import { ValueType } from '@opentelemetry/api'
 import type { AppWebSocket } from './types'
@@ -15,9 +16,9 @@ export interface ClientToServerEvents {
   ready: () => void
   navigated: (url: string) => void
   'queue:join': (slotId: QueueSlotId) => void
-  'queue:leave': () => void
+  'queue:leave': (queue?: string) => void
   'queue:votemap': (mapName: string) => void
-  'queue:readyup': () => void
+  'queue:readyup': (queue?: string) => void
   'queue:markasfriend': (steamId: SteamId64 | null) => void
   'queue:togglepreready': () => void
   'queue:audiostatus': (audioReady: boolean) => void
@@ -40,12 +41,12 @@ const joinQueue = z.object({
 })
 
 const leaveQueue = z.object({
-  leave: z.literal(''),
+  leave: z.union([z.literal(''), z.enum(queueIds)]),
   HEADERS: htmxHeaders,
 })
 
 const readyUp = z.object({
-  ready: z.literal(''),
+  ready: z.union([z.literal(''), z.enum(queueIds)]),
   HEADERS: htmxHeaders,
 })
 
@@ -272,9 +273,9 @@ export class Gateway extends EventEmitter implements Broadcaster {
       if ('join' in parsed) {
         this.emit('queue:join', socket, parsed.join)
       } else if ('leave' in parsed) {
-        this.emit('queue:leave', socket)
+        this.emit('queue:leave', socket, parsed.leave || undefined)
       } else if ('ready' in parsed) {
-        this.emit('queue:readyup', socket)
+        this.emit('queue:readyup', socket, parsed.ready || undefined)
       } else if ('votemap' in parsed) {
         this.emit('queue:votemap', socket, parsed.votemap)
       } else if ('markasfriend' in parsed) {

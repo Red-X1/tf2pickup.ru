@@ -4,6 +4,7 @@ import type { UserMetadata } from './shared/types/user-metadata'
 import { logger } from './logger'
 import type { QueueSlotModel } from './database/models/queue-slot.model'
 import { QueueState } from './database/models/queue-state.model'
+import type { QueueId } from './queue/types/queue-id'
 import type { GameModel, GameNumber } from './database/models/game.model'
 import type { PlayerBan, PlayerModel } from './database/models/player.model'
 import type { MapPoolEntry } from './database/models/map-pool-entry.model'
@@ -192,6 +193,7 @@ export interface Events {
   }
 
   'queue:playerKicked': {
+    queue: QueueId
     player: SteamId64
   }
   'queue:cleared': {
@@ -199,25 +201,32 @@ export interface Events {
     playerCount: number
   }
   'queue/mapPool:reset': {
+    queue: QueueId
     maps: MapPoolEntry[]
   }
   'queue/slots:updated': {
+    queue: QueueId
     slots: QueueSlotModel[]
   }
   'queue/state:updated': {
+    queue: QueueId
     state: QueueState
   }
   'queue/mapOptions:reset': {
+    queue: QueueId
     mapOptions: string[]
   }
   'queue/mapVoteResults:updated': {
+    queue: QueueId
     results: Record<string, number>
   }
   'queue/friendship:created': {
+    queue: QueueId
     source: SteamId64
     target: SteamId64
   }
   'queue/friendship:updated': {
+    queue: QueueId
     source: SteamId64
     target: {
       before: SteamId64
@@ -225,6 +234,7 @@ export interface Events {
     }
   }
   'queue/friendship:removed': {
+    queue: QueueId
     source: SteamId64
     target: SteamId64
   }

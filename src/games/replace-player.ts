@@ -9,7 +9,8 @@ import { GameEventType } from '../database/models/game-event.model'
 import { events } from '../events'
 import { applyCooldown } from './apply-cooldown'
 import { players } from '../players'
-import { queue } from '../queue-auto'
+import { kick } from '../queue-auto/kick'
+import { queueIds } from '../queue/types/queue-id'
 import { calculateJoinGameserverTimeout } from './calculate-join-gameserver-timeout'
 import { logError } from '../utils/log-error'
 
@@ -108,7 +109,9 @@ export async function replacePlayer({
     }
 
     try {
-      await queue.kick(replacement)
+      for (const queue of queueIds) {
+        await kick(queue, replacement)
+      }
     } catch (error) {
       logError(error)
     }

@@ -1,14 +1,15 @@
 import type { ImportAnalysis } from '../../types'
 import { Admin } from '../../../views/html/admin'
 import type { PlayerSkill } from '../../../../database/models/player.model'
-import { config } from '../../../../queue-auto/config'
+import { allGameClasses } from '../../../../queue-auto/all-classes'
+import type { Tf2ClassName } from '../../../../shared/types/tf2-class-name'
 
 interface PreviewPageProps {
   analysis: ImportAnalysis
 }
 
 export function PreviewPage({ analysis }: PreviewPageProps) {
-  const classNames = config.classes.map(c => c.name)
+  const classNames: Tf2ClassName[] = allGameClasses()
   const totalChanges =
     analysis.changedPlayers.length +
     analysis.initializedPlayers.length +

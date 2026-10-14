@@ -5,7 +5,7 @@ import { PlayerRole, type PlayerModel } from '../../../database/models/player.mo
 import { playerAvatarUrl } from '../../../shared/player-avatar-url'
 import { format } from 'date-fns'
 import { Tf2ClassName } from '../../../shared/types/tf2-class-name'
-import { queue } from '../../../queue-auto'
+import { allGameClasses } from '../../../queue-auto/all-classes'
 import { GameClassIcon } from '../../../html/components/game-class-icon'
 import {
   IconAlignBoxBottomRight,
@@ -84,7 +84,9 @@ export async function PlayerPage(props: { player: PlayerPageData; page: number }
 export async function PlayerGameList(props: { steamId: SteamId64; page: number }) {
   const skip = (props.page - 1) * gamesPerPage
   const games = await collections.games
-    .find<PickDeep<GameModel, 'number' | 'state' | 'events.0' | 'score' | 'map' | 'slots'>>(
+    .find<
+      PickDeep<GameModel, 'number' | 'state' | 'events.0' | 'score' | 'map' | 'slots' | 'queue'>
+    >(
       { 'slots.player': props.steamId },
       {
         limit: gamesPerPage,
@@ -97,6 +99,7 @@ export async function PlayerGameList(props: { steamId: SteamId64; page: number }
           score: 1,
           map: 1,
           slots: 1,
+          queue: 1,
         },
       },
     )
@@ -197,7 +200,7 @@ function PlayerPresentation(props: {
 
         <div class="bg-abru-light-15 row-span-2 mx-2 hidden h-[48px] w-[2px] self-center md:block"></div>
 
-        {queue.config.classes.map(({ name: gameClass }) => (
+        {allGameClasses().map(gameClass => (
           <>
             <GameClassIcon gameClass={gameClass} size={32} />
             <span class="text-2xl font-bold">{props.gameCountOnClasses[gameClass] ?? 0}</span>
@@ -210,7 +213,7 @@ function PlayerPresentation(props: {
           href={`https://steamcommunity.com/profiles/${props.player.steamId}`}
           target="_blank"
           rel="noreferrer"
-          class={['player-presentation-link', queue.config.classes.length > 4 && 'compact']}
+          class={['player-presentation-link', allGameClasses().length > 4 && 'compact']}
           title="Steam"
           data-umami-event="open-external-profile"
           data-umami-event-target="steam"
@@ -223,7 +226,7 @@ function PlayerPresentation(props: {
           href={`https://logs.tf/profile/${props.player.steamId}`}
           target="_blank"
           rel="noreferrer"
-          class={['player-presentation-link', queue.config.classes.length > 4 && 'compact']}
+          class={['player-presentation-link', allGameClasses().length > 4 && 'compact']}
           title="Logs"
           data-umami-event="open-external-profile"
           data-umami-event-target="logs"
@@ -237,7 +240,7 @@ function PlayerPresentation(props: {
             href={`https://etf2l.org/forum/user/${props.player.etf2lProfile.id}`}
             target="_blank"
             rel="noreferrer"
-            class={['player-presentation-link', queue.config.classes.length > 4 && 'compact']}
+            class={['player-presentation-link', allGameClasses().length > 4 && 'compact']}
             title="ETF2L"
             data-umami-event="open-external-profile"
             data-umami-event-target="etf2l"
@@ -254,7 +257,7 @@ function PlayerPresentation(props: {
             href={`https://www.twitch.tv/${props.player.twitchTvProfile.login}/`}
             target="_blank"
             rel="noreferrer"
-            class={['player-presentation-link', queue.config.classes.length > 4 && 'compact']}
+            class={['player-presentation-link', allGameClasses().length > 4 && 'compact']}
             title="Twitch"
             data-umami-event="open-external-profile"
             data-umami-event-target="twitch"

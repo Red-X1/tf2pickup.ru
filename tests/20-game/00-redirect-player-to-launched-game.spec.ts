@@ -59,7 +59,7 @@ test('redirect player to launched game @6v6 @9v9', async ({
   const gameNumber = Number(matches[1])
 
   await redirectedQueuePage.page.goBack()
-  await redirectedQueuePage.page.waitForURL('/')
+  await redirectedQueuePage.page.waitForURL(/\/(6v6|9v9|ultiduo)$/)
   await expect(redirectedQueuePage.goBackToGameLink()).toBeVisible()
 
   // kill the game and free the game server, as the gameNumber fixture does

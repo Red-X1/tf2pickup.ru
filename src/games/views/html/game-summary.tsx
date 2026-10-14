@@ -18,6 +18,7 @@ export function GameSummary(props: {
     | 'stvConnectString'
     | 'slots'
     | 'gameServer'
+    | 'queue'
   >
   actor?: SteamId64 | undefined
 }) {

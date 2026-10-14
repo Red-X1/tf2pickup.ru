@@ -49,5 +49,21 @@
         border-color: transparent transparent var(--color-abru-dark-6) transparent;
       }
     }
+
+    &[data-placement='right'] {
+      bottom: auto;
+      top: 50%;
+      left: calc(100% + 8px);
+      transform: translateY(-50%);
+
+      &::after {
+        top: 50%;
+        left: auto;
+        right: 100%;
+        margin-left: 0;
+        margin-top: -5px;
+        border-color: transparent var(--color-abru-dark-6) transparent transparent;
+      }
+    }
   }
 }

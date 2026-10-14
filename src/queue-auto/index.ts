@@ -1,30 +1,29 @@
-import { config } from './config'
-import { getSlots } from './get-slots'
-import { getState } from '../queue/get-state'
-import { getMapWinner } from './get-map-winner'
 import { collections } from '../database/collections'
 import { logger } from '../logger'
-import { reset } from './reset'
-import { resetMapOptions } from '../maps/reset-options'
+import { queueIds } from '../queue/types/queue-id'
 import { getFriends } from './get-friends'
 import { getMapVoteResults } from './get-map-vote-results'
-import { unreadyQueue } from './unready-queue'
+import { getMapWinner } from './get-map-winner'
+import { getSlots } from './get-slots'
 import { kick } from './kick'
+import { reset } from './reset'
+import { unreadyQueue } from './unready-queue'
+import { getState } from '../queue/get-state'
 
-const slotCount = await collections.queueSlots.countDocuments()
-if (slotCount === 0) {
-  logger.info(`no queue initialized, initializing one now...`)
-  await reset()
+for (const queue of queueIds) {
+  const slotCount = await collections.queueSlots.countDocuments({ queue })
+  if (slotCount === 0) {
+    logger.info({ queue }, `no queue initialized, initializing one now...`)
+    await reset(queue)
+  }
 }
 
 export const queue = {
-  config,
   getFriends,
   getMapVoteResults,
   getMapWinner,
   getSlots,
   getState,
   kick,
-  resetMapOptions,
   unreadyQueue,
 } as const

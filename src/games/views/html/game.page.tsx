@@ -15,7 +15,6 @@ import { RconConsoleDialog } from './rcon-console-dialog'
 import { AdminToolbox } from './admin-toolbox'
 import { findOne } from '../../find-one'
 import { requestContext } from '@fastify/request-context'
-import { environment } from '../../../environment'
 
 export async function GamePage(props: { number: GameNumber }) {
   const user = requestContext.get('user')
@@ -31,6 +30,7 @@ export async function GamePage(props: { number: GameNumber }) {
     'score',
     'connectString',
     'stvConnectString',
+    'queue',
   ])
   const actor = user?.player.steamId
   return (
@@ -43,7 +43,7 @@ export async function GamePage(props: { number: GameNumber }) {
     >
       <NavigationBar />
       <Page>
-        <div class={`game-page config-${environment.QUEUE_CONFIG} relative container mx-auto`}>
+        <div class={`game-page config-${game.queue} relative container mx-auto`}>
           <GameSummary game={game} actor={actor} />
           <GameSlotList game={game} actor={actor} />
           <GameEventList game={game} />

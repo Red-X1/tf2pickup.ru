@@ -9,6 +9,7 @@ import { mapPool } from '../../../maps/pool'
 import { requestContext } from '@fastify/request-context'
 import { routes } from '../../../utils/routes'
 import { activityLog } from '../../../activity-log'
+import { queueIds } from '../../../queue/types/queue-id'
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export default routes(async app => {
@@ -19,9 +20,14 @@ export default routes(async app => {
         config: {
           authorize: [PlayerRole.admin],
         },
+        schema: {
+          querystring: z.object({
+            queue: z.enum(queueIds).default('6v6'),
+          }),
+        },
       },
-      async (_request, reply) => {
-        await reply.status(200).html(MapPoolPage())
+      async (request, reply) => {
+        await reply.status(200).html(MapPoolPage({ queue: request.query.queue }))
       },
     )
     .post(
@@ -33,6 +39,7 @@ export default routes(async app => {
         schema: {
           body: z
             .object({
+              queue: z.enum(queueIds),
               'name[]': z.array(z.string()),
               'execConfig[]': z.array(z.string()),
             })
@@ -42,20 +49,25 @@ export default routes(async app => {
                 message: 'name[] and execConfig[] must be of the same length',
               },
             )
-            .transform(({ 'name[]': name, 'execConfig[]': execConfig }) => {
+            .transform(({ queue, 'name[]': name, 'execConfig[]': execConfig }) => {
               const maps: MapPoolEntry[] = []
               for (let i = 0; i < name.length; ++i) {
-                maps.push({ name: name[i]!, execConfig: execConfig[i] })
+                maps.push({ queue, name: name[i]!, execConfig: execConfig[i] })
               }
-              return { maps }
+              return { queue, maps }
             }),
         },
       },
       async (request, reply) => {
-        const newMaps = await mapPool.set(request.body.maps)
-        await activityLog.record({ type: 'map pool change', maps: newMaps.map(m => m.name) })
+        const { queue, maps } = request.body
+        const newMaps = await mapPool.set(queue, maps)
+        await activityLog.record({
+          type: 'map pool change',
+          queue,
+          maps: newMaps.map(m => m.name),
+        })
         requestContext.set('messages', { success: ['Configuration saved'] })
-        await reply.status(200).html(MapPoolPage())
+        await reply.status(200).html(MapPoolPage({ queue }))
       },
     )
     .post(

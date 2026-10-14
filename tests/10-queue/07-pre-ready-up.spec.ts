@@ -12,7 +12,11 @@ test.beforeEach(async ({ db }) => {
   const configuration = db.collection('configuration')
   await configuration.updateOne(
     { key: 'queue.pre_ready_up_timeout' },
-    { $set: { value: readyUpTimeout } },
+    {
+      $set: {
+        value: { '6v6': readyUpTimeout, '9v9': readyUpTimeout, ultiduo: readyUpTimeout },
+      },
+    },
     { upsert: true },
   )
 })

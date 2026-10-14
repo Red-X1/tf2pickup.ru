@@ -291,6 +291,9 @@ function Details(props: { log: ActivityLogEntryModel; playerNames: Map<SteamId64
     const extra = log.maps.length > 5 ? ` +${log.maps.length - 5} more` : ''
     return (
       <span>
+        <span class="text-abru-light-50" safe>
+          [{log.queue}]{' '}
+        </span>
         <span safe>{preview}</span>
         {log.maps.length > 5 && (
           <span class="text-abru-light-50" safe>

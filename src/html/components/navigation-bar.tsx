@@ -1,5 +1,6 @@
 import { requestContext } from '@fastify/request-context'
 import { GamesLink } from './games-link'
+import { FormatSidebar } from '../../queue-auto/views/html/format-sidebar'
 import {
   IconBrandDiscord,
   IconChartPie,
@@ -20,65 +21,66 @@ import { playerAvatarUrl } from '../../shared/player-avatar-url'
 export function NavigationBar() {
   const user = requestContext.get('user')
   return (
-    <nav class="relative flex min-h-[64px] flex-row justify-center lg:min-h-[95px]">
-      <div class="container flex flex-row items-center px-2 lg:px-0">
-        <button
-          class="text-abru-light-75 p-3 lg:hidden"
-          id="toggle-nav-menu"
-          aria-label="Toggle menu"
-          aria-controls="nav-menu"
-          aria-expanded="false"
-        >
-          <span id="nav-menu-icon-open">
-            <IconMenu2 size={28} />
-          </span>
-          <span id="nav-menu-icon-close" class="hidden">
-            <IconX size={28} />
-          </span>
-        </button>
+    <>
+      <nav class="relative flex min-h-[64px] flex-row justify-center lg:min-h-[95px]">
+        <div class="container flex flex-row items-center px-2 lg:px-0">
+          <button
+            class="text-abru-light-75 p-3 lg:hidden"
+            id="toggle-nav-menu"
+            aria-label="Toggle menu"
+            aria-controls="nav-menu"
+            aria-expanded="false"
+          >
+            <span id="nav-menu-icon-open">
+              <IconMenu2 size={28} />
+            </span>
+            <span id="nav-menu-icon-close" class="hidden">
+              <IconX size={28} />
+            </span>
+          </button>
 
-        <a href="/" class="self-center lg:mx-1">
-          <img
-            alt={`${environment.WEBSITE_NAME} logo`}
-            src="/logo.png"
-            height="120"
-            class="h-[32px] lg:h-[44px]"
-          />
-        </a>
+          <a href="/" class="self-center lg:mx-1">
+            <img
+              alt={`${environment.WEBSITE_NAME} logo`}
+              src="/logo.png"
+              height="120"
+              class="h-[32px] lg:h-[44px]"
+            />
+          </a>
 
-        <div
-          id="nav-menu"
-          class="max-lg:bg-abru/85 hidden flex-row items-center gap-5 font-medium max-lg:fixed max-lg:inset-x-0 max-lg:top-16 max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:items-stretch max-lg:overflow-y-auto max-lg:py-4 lg:ml-auto lg:flex"
-        >
-          <Menu />
+          <div
+            id="nav-menu"
+            class="max-lg:bg-abru/85 hidden flex-row items-center gap-5 font-medium max-lg:fixed max-lg:inset-x-0 max-lg:top-16 max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:items-stretch max-lg:overflow-y-auto max-lg:py-4 lg:ml-auto lg:flex"
+          >
+            <Menu />
+          </div>
+
+          <div class="ml-auto lg:ml-3">
+            {user ? (
+              <>
+                <a
+                  href={`/players/${user.player.steamId}`}
+                  class="block p-1 lg:hidden"
+                  aria-label="My profile"
+                  preload="mousedown"
+                >
+                  <img
+                    src={playerAvatarUrl(user.player.avatar, 'medium')}
+                    width="64"
+                    class="h-[36px] w-[36px] rounded-[3px]"
+                    alt={`${user.player.name}'s avatar`}
+                  />
+                </a>
+                <div class="max-lg:hidden">
+                  <Profile {...user.player} />
+                </div>
+              </>
+            ) : (
+              <SteamButton />
+            )}
+          </div>
         </div>
-
-        <div class="ml-auto lg:ml-3">
-          {user ? (
-            <>
-              <a
-                href={`/players/${user.player.steamId}`}
-                class="block p-1 lg:hidden"
-                aria-label="My profile"
-                preload="mousedown"
-              >
-                <img
-                  src={playerAvatarUrl(user.player.avatar, 'medium')}
-                  width="64"
-                  class="h-[36px] w-[36px] rounded-[3px]"
-                  alt={`${user.player.name}'s avatar`}
-                />
-              </a>
-              <div class="max-lg:hidden">
-                <Profile {...user.player} />
-              </div>
-            </>
-          ) : (
-            <SteamButton />
-          )}
-        </div>
-      </div>
-      <script>{`
+        <script>{`
         {
           const menu = document.getElementById('nav-menu');
           const button = document.getElementById('toggle-nav-menu');
@@ -95,7 +97,9 @@ export function NavigationBar() {
           });
         }
       `}</script>
-    </nav>
+      </nav>
+      <FormatSidebar />
+    </>
   )
 }
 

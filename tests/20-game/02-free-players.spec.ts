@@ -2,7 +2,7 @@ import { expect } from '@playwright/test'
 import { minutesToMilliseconds, secondsToMilliseconds } from 'date-fns'
 import { launchGame as test } from '../fixtures/launch-game'
 import { delay } from 'es-toolkit'
-import { queueSlots } from '../queue-slots'
+import { queueSlots, getQueueConfig } from '../queue-slots'
 
 test.use({ waitForStage: 'launching' })
 test('free players when the game ends @6v6 @9v9', async ({
@@ -18,7 +18,7 @@ test('free players when the game ends @6v6 @9v9', async ({
       const page = await player.queuePage()
       await page.goto()
       await expect(page.goBackToGameLink()).toBeVisible()
-      for (const slot of queueSlots()) {
+      for (const slot of queueSlots(getQueueConfig())) {
         await expect(page.slot(slot).joinButton()).toBeDisabled()
       }
     }),
@@ -43,7 +43,7 @@ test('free players when the game ends @6v6 @9v9', async ({
           expect(page.goBackToGameLink()).not.toBeVisible({
             timeout: secondsToMilliseconds(1),
           }),
-          ...Array.from(queueSlots()).map(async slot => {
+          ...Array.from(queueSlots(getQueueConfig())).map(async slot => {
             await expect(page.slot(slot).joinButton()).toBeEnabled({
               timeout: secondsToMilliseconds(1),
             })
@@ -56,7 +56,7 @@ test('free players when the game ends @6v6 @9v9', async ({
         const page = await player.queuePage()
         await Promise.all([
           expect(page.goBackToGameLink()).toBeVisible({ timeout: secondsToMilliseconds(1) }),
-          ...Array.from(queueSlots()).map(async slot => {
+          ...Array.from(queueSlots(getQueueConfig())).map(async slot => {
             await expect(page.slot(slot).joinButton()).toBeDisabled({
               timeout: secondsToMilliseconds(1),
             })
@@ -75,7 +75,7 @@ test('free players when the game ends @6v6 @9v9', async ({
           expect(page.goBackToGameLink()).not.toBeVisible({
             timeout: secondsToMilliseconds(6),
           }),
-          ...Array.from(queueSlots()).map(async slot => {
+          ...Array.from(queueSlots(getQueueConfig())).map(async slot => {
             await expect(page.slot(slot).joinButton()).toBeEnabled({
               timeout: secondsToMilliseconds(6),
             })

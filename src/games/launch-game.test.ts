@@ -1,13 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../queue-auto', () => ({
-  queue: {
-    getSlots: vi.fn().mockResolvedValue([]),
-    getMapWinner: vi.fn().mockResolvedValue('cp_badlands'),
-    getFriends: vi.fn().mockResolvedValue([]),
-    unreadyQueue: vi.fn().mockResolvedValue(),
-  },
-}))
+const mockGetSlots = vi.hoisted(() => vi.fn().mockResolvedValue([]))
+const mockGetMapWinner = vi.hoisted(() => vi.fn().mockResolvedValue('cp_badlands'))
+const mockGetFriends = vi.hoisted(() => vi.fn().mockResolvedValue([]))
+const mockUnreadyQueue = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
+
+vi.mock('../queue-auto/get-slots', () => ({ getSlots: mockGetSlots }))
+vi.mock('../queue-auto/get-map-winner', () => ({ getMapWinner: mockGetMapWinner }))
+vi.mock('../queue-auto/get-friends', () => ({ getFriends: mockGetFriends }))
+vi.mock('../queue-auto/unready-queue', () => ({ unreadyQueue: mockUnreadyQueue }))
 
 vi.mock('./create', () => ({
   create: vi.fn(),
@@ -28,7 +29,6 @@ vi.mock('../logger', () => ({
 import { launchGame } from './launch-game'
 import { create } from './create'
 import { assignGameServer } from './assign-game-server'
-import { queue } from '../queue-auto'
 
 describe('launchGame()', () => {
   beforeEach(() => {
@@ -39,18 +39,18 @@ describe('launchGame()', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(create).mockResolvedValue({ number: 42 } as any)
 
-    await launchGame()
+    await launchGame('6v6')
 
     expect(assignGameServer).toHaveBeenCalledWith(42, { retries: 3 })
-    expect(queue.unreadyQueue).not.toHaveBeenCalled()
+    expect(mockUnreadyQueue).not.toHaveBeenCalled()
   })
 
   it('reverts the queue when game creation fails', async () => {
     vi.mocked(create).mockRejectedValue(new Error('queue slot medic-1 is empty'))
 
-    await launchGame()
+    await launchGame('6v6')
 
-    expect(queue.unreadyQueue).toHaveBeenCalled()
+    expect(mockUnreadyQueue).toHaveBeenCalledWith('6v6')
     expect(assignGameServer).not.toHaveBeenCalled()
   })
 })

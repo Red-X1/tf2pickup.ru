@@ -1,6 +1,8 @@
 import { z } from 'zod'
+import { queueIds } from '../../queue/types/queue-id'
 
 export const mapPoolEntrySchema = z.object({
+  queue: z.enum(queueIds),
   name: z.string().trim(),
   execConfig: z.string().optional(),
   cooldown: z.number().optional(),
