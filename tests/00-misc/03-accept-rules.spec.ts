@@ -1,6 +1,7 @@
 import { authUsers, expect } from '../fixtures/auth-users'
 import { mergeTests } from '@playwright/test'
 import { accessMongoDb } from '../fixtures/access-mongo-db'
+import { getQueueConfig } from '../queue-slots'
 
 // eslint-disable-next-line @typescript-eslint/no-deprecated
 const test = mergeTests(authUsers, accessMongoDb)
@@ -14,7 +15,7 @@ test.describe('when user has not accepted the rules yet', () => {
 
   test('accept rules @6v6 @9v9', async ({ users }) => {
     const page = await users.getFirst().page()
-    await page.goto('/')
+    await page.goto(`/${getQueueConfig()}`)
     await expect(page.getByTitle('Accept rules dialog')).toBeVisible()
 
     const btn = page.getByRole('button', { name: 'I accept these rules' })

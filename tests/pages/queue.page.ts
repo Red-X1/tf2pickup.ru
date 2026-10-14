@@ -1,6 +1,6 @@
 import { errors, expect, type Locator, type Page } from '@playwright/test'
 import { minutesToMilliseconds, secondsToMilliseconds } from 'date-fns'
-import { queueSlots, type SlotId } from '../queue-slots'
+import { queueSlots, getQueueConfig, type SlotId } from '../queue-slots'
 
 class QueueSlot {
   readonly locator: Locator
@@ -75,7 +75,7 @@ export class QueuePage {
   constructor(public readonly page: Page) {}
 
   async goto() {
-    await this.page.goto('/')
+    await this.page.goto(`/${getQueueConfig()}`)
   }
 
   async joinQueue(slot: SlotId) {
@@ -91,7 +91,7 @@ export class QueuePage {
     await Promise.all([
       this.page.waitForResponse(
         response =>
-          response.url().endsWith('/queue/players') &&
+          response.url().includes('/queue/players') &&
           response.request().method() === 'DELETE' &&
           response.status() === 204,
       ),
@@ -143,7 +143,7 @@ export class QueuePage {
 
   async waitToBeEmpty(options?: { timeout?: number }) {
     await Promise.all(
-      Array.from(queueSlots()).map(async i => {
+      Array.from(queueSlots(getQueueConfig())).map(async i => {
         await this.slot(i).waitToBeFree(options)
       }),
     )

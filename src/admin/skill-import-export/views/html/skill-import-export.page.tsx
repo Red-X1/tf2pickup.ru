@@ -1,9 +1,9 @@
-import { config } from '../../../../queue-auto/config'
+import { allGameClasses } from '../../../../queue-auto/all-classes'
 import { IconDownload, IconUpload } from '../../../../html/components/icons'
 import { Admin } from '../../../views/html/admin'
 
 export async function SkillImportExportPage() {
-  const classNames = config.classes.map(c => c.name)
+  const classNames = allGameClasses()
 
   return (
     <Admin activePage="skill-import-export">

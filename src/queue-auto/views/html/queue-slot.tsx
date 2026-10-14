@@ -41,10 +41,10 @@ export async function QueueSlot(props: { slot: QueueSlotModel; actor?: Actor }) 
       disabled = 'You have active bans'
     } else if (props.actor.activeGame) {
       disabled = 'You are already in a game'
-    } else if (!(await meetsSkillThreshold(props.actor, props.slot))) {
+    } else if (!(await meetsSkillThreshold(props.slot.queue, props.actor, props.slot))) {
       disabled = `You do not meet skill requirements to play ${props.slot.gameClass}`
     } else if (
-      (await configuration.get('queue.require_player_verification')) &&
+      (await configuration.get('queue.require_player_verification'))[props.slot.queue] &&
       !props.actor.verified
     ) {
       disabled = 'You are not verified to join the queue'
@@ -104,7 +104,12 @@ async function PlayerInfo(props: { slot: QueueSlotModel; actor?: Actor }) {
   let slotActionButton: JSX.Element
   if (props.actor?.steamId === props.slot.player.steamId && !props.slot.ready) {
     slotActionButton = (
-      <button class="leave-queue-button" name="leave" value="" data-umami-event="leave-queue">
+      <button
+        class="leave-queue-button"
+        name="leave"
+        value={props.slot.queue}
+        data-umami-event="leave-queue"
+      >
         <IconMinus />
         <span class="sr-only">Leave queue</span>
         <span class="tooltip">Leave queue</span>
@@ -206,9 +211,13 @@ async function determineMarkAsFriendButtonState(
     return MarkAsFriendButtonState.none
   }
 
-  const actorsSlot = await collections.queueSlots.findOne({ 'player.steamId': actor.steamId })
+  const actorsSlot = await collections.queueSlots.findOne({
+    queue: slot.queue,
+    'player.steamId': actor.steamId,
+  })
   if (actorsSlot?.canMakeFriendsWith?.includes(slot.gameClass)) {
     const friendship = await collections.queueFriends.findOne({
+      queue: slot.queue,
       target: slot.player.steamId,
     })
     if (friendship === null) {

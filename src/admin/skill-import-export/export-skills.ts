@@ -1,6 +1,6 @@
 import { stringify } from 'csv-stringify/sync'
 import { collections } from '../../database/collections'
-import { config } from '../../queue-auto/config'
+import { allGameClasses } from '../../queue-auto/all-classes'
 import type { Tf2ClassName } from '../../shared/types/tf2-class-name'
 
 interface ExportedPlayerSkill extends Partial<Record<Tf2ClassName, string | number>> {
@@ -9,7 +9,7 @@ interface ExportedPlayerSkill extends Partial<Record<Tf2ClassName, string | numb
 }
 
 export async function exportSkills(): Promise<string> {
-  const classNames = config.classes.map(c => c.name)
+  const classNames = allGameClasses()
 
   const players = await collections.players
     .find({ skill: { $exists: true, $ne: {} } }, { projection: { steamId: 1, name: 1, skill: 1 } })

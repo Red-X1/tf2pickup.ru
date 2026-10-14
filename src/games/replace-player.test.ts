@@ -28,7 +28,7 @@ vi.mock('../players', () => ({
 }))
 
 const mockKick = vi.hoisted(() => vi.fn())
-vi.mock('../queue-auto', () => ({ queue: { kick: mockKick } }))
+vi.mock('../queue-auto/kick', () => ({ kick: mockKick }))
 
 const mockApplyCooldown = vi.hoisted(() => vi.fn())
 vi.mock('./apply-cooldown', () => ({ applyCooldown: mockApplyCooldown }))
@@ -87,8 +87,10 @@ it('commits the whole substitution transition and returns the updated game', asy
   expect(mockPlayersUpdate).toHaveBeenCalledWith(replacement, { $set: { activeGame: number } })
   expect(mockPlayersUpdate).toHaveBeenCalledWith(replacee, { $unset: { activeGame: 1 } })
 
-  // replacement leaves the queue
-  expect(mockKick).toHaveBeenCalledWith(replacement)
+  // replacement leaves every queue
+  expect(mockKick).toHaveBeenCalledWith('6v6', replacement)
+  expect(mockKick).toHaveBeenCalledWith('9v9', replacement)
+  expect(mockKick).toHaveBeenCalledWith('ultiduo', replacement)
 
   // shouldJoinBy written on the replacement's slot
   expect(mockUpdate).toHaveBeenNthCalledWith(

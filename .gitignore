@@ -2,7 +2,11 @@
 .DS_Store
 node_modules
 .env
+NOTES.md
+*.swp
 *.code-workspace
+.agents/
+skills-lock.json
 dist
 /test-results/
 /playwright-report/

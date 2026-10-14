@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test'
 import { minutesToMilliseconds, secondsToMilliseconds } from 'date-fns'
 import { launchGame as test } from '../fixtures/launch-game'
-import { queueSlots } from '../queue-slots'
+import { queueSlots, getQueueConfig } from '../queue-slots'
 
 test.use({ waitForStage: 'started' })
 
@@ -31,7 +31,7 @@ test('self-substituting players have the same queue cooldown as regular players 
     expect(mayflowersQueuePage.goBackToGameLink()).toBeVisible({
       timeout: secondsToMilliseconds(1),
     }),
-    ...Array.from(queueSlots()).map(slot =>
+    ...Array.from(queueSlots(getQueueConfig())).map(slot =>
       expect(mayflowersQueuePage.slot(slot).joinButton()).toBeDisabled({
         timeout: secondsToMilliseconds(1),
       }),
@@ -73,7 +73,7 @@ test('substitute players skip the queue cooldown @6v6 @9v9', async ({
     expect(slitherTuftsQueuePage.goBackToGameLink()).toBeVisible({
       timeout: secondsToMilliseconds(1),
     }),
-    ...Array.from(queueSlots()).map(slot =>
+    ...Array.from(queueSlots(getQueueConfig())).map(slot =>
       expect(slitherTuftsQueuePage.slot(slot).joinButton()).toBeDisabled({
         timeout: secondsToMilliseconds(1),
       }),
@@ -81,7 +81,7 @@ test('substitute players skip the queue cooldown @6v6 @9v9', async ({
   ])
 
   await Promise.all(
-    Array.from(queueSlots()).map(slot =>
+    Array.from(queueSlots(getQueueConfig())).map(slot =>
       expect(ghostWalkersQueuePage.slot(slot).joinButton()).toBeEnabled(),
     ),
   )

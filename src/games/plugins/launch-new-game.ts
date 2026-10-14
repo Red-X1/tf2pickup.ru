@@ -2,7 +2,8 @@ import fp from 'fastify-plugin'
 import { events } from '../../events'
 import { QueueState } from '../../database/models/queue-state.model'
 import { logger } from '../../logger'
-import { queue } from '../../queue-auto'
+import { getState } from '../../queue/get-state'
+import { queueIds } from '../../queue/types/queue-id'
 import { debounce } from 'es-toolkit'
 import { safe } from '../../utils/safe'
 import { launchGame } from '../launch-game'
@@ -15,17 +16,27 @@ import { GameState } from '../../database/models/game.model'
 export default fp(
   // eslint-disable-next-line @typescript-eslint/require-await
   async app => {
-    const launchGameDebounced = debounce(safe(launchGame), 100)
+    const launchGameDebounced = new Map<string, ReturnType<typeof debounce>>()
 
-    events.on('queue/state:updated', ({ state }) => {
+    events.on('queue/state:updated', ({ queue, state }) => {
       if (state === QueueState.launching) {
-        launchGameDebounced()
+        const existing = launchGameDebounced.get(queue)
+        const fn =
+          existing ??
+          debounce(
+            safe(() => launchGame(queue)),
+            100,
+          )
+        launchGameDebounced.set(queue, fn)
+        fn()
       }
     })
 
     app.addHook('onListen', async () => {
-      if ((await queue.getState()) === QueueState.launching) {
-        launchGameDebounced()
+      for (const queue of queueIds) {
+        if ((await getState(queue)) === QueueState.launching) {
+          void launchGame(queue)
+        }
       }
 
       const orphanedGames = await getOrphanedGames()

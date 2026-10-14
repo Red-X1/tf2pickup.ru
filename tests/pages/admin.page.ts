@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test'
 import { secondsToMilliseconds } from 'date-fns'
+import { getQueueConfig } from '../queue-slots'
 
 export class AdminPage {
   constructor(public readonly page: Page) {}
@@ -133,8 +134,11 @@ export class AdminPage {
   }
 
   async configureRequirePlayerVerification(enabled: boolean) {
+    const queue = getQueueConfig()
     await this.page.goto('/admin/player-restrictions')
-    await this.page.getByLabel('Require player verification').setChecked(enabled, { force: true })
+    await this.page
+      .locator(`#requirePlayerVerification\\.${queue}`)
+      .setChecked(enabled, { force: true })
     await this.page.getByRole('button', { name: 'Save' }).click()
     await expect(this.page.getByText('Configuration saved')).toBeVisible()
   }

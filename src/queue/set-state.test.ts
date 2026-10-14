@@ -7,6 +7,10 @@ vi.mock('../database/collections', () => ({
     },
     queueState: {
       updateOne: vi.fn(),
+      findOne: vi.fn(),
+    },
+    players: {
+      find: vi.fn(),
     },
   },
 }))
@@ -41,7 +45,7 @@ describe('setState()', () => {
     it('rejects when a queue slot is empty or unready', async () => {
       vi.mocked(collections.queueSlots.countDocuments).mockResolvedValue(1)
 
-      await expect(setState(QueueState.launching)).rejects.toThrow(
+      await expect(setState('6v6', QueueState.launching)).rejects.toThrow(
         'cannot launch: queue is no longer full and ready',
       )
       expect(collections.queueState.updateOne).not.toHaveBeenCalled()
@@ -51,24 +55,25 @@ describe('setState()', () => {
     it('proceeds when every slot is taken and ready', async () => {
       vi.mocked(collections.queueSlots.countDocuments).mockResolvedValue(0)
 
-      await setState(QueueState.launching)
+      await setState('6v6', QueueState.launching)
 
       expect(collections.queueState.updateOne).toHaveBeenCalledWith(
-        {},
+        { queue: '6v6' },
         { $set: { state: QueueState.launching } },
       )
       expect(events.emit).toHaveBeenCalledWith('queue/state:updated', {
+        queue: '6v6',
         state: QueueState.launching,
       })
     })
   })
 
   it('does not verify slots for other transitions', async () => {
-    await setState(QueueState.waiting)
+    await setState('6v6', QueueState.waiting)
 
     expect(collections.queueSlots.countDocuments).not.toHaveBeenCalled()
     expect(collections.queueState.updateOne).toHaveBeenCalledWith(
-      {},
+      { queue: '6v6' },
       { $set: { state: QueueState.waiting } },
     )
   })

@@ -1,4 +1,5 @@
-const queueConfig = process.env['QUEUE_CONFIG'] ?? '6v6'
+import type { QueueId } from '../src/queue/types/queue-id'
+import { isQueueId } from '../src/queue/types/queue-id'
 
 type SlotId6v6 = `${'scout' | 'soldier'}-${1 | 2 | 3 | 4}` | `${'demoman' | 'medic'}-${1 | 2}`
 
@@ -26,8 +27,14 @@ const classes9v9 = [
   { name: 'spy', count: 2 },
 ]
 
-export function* queueSlots(): Generator<SlotId> {
-  const classes = queueConfig === '9v9' ? classes9v9 : classes6v6
+const classesUltiduo = [
+  { name: 'scout', count: 2 },
+  { name: 'soldier', count: 2 },
+  { name: 'medic', count: 2 },
+]
+
+export function* queueSlots(queue: QueueId = '6v6'): Generator<SlotId> {
+  const classes = queue === '9v9' ? classes9v9 : queue === 'ultiduo' ? classesUltiduo : classes6v6
   for (const gc of classes) {
     for (let i = 1; i <= gc.count; ++i) {
       yield `${gc.name}-${i}` as SlotId
@@ -35,10 +42,23 @@ export function* queueSlots(): Generator<SlotId> {
   }
 }
 
-export function getPlayerCount(): number {
-  return queueConfig === '9v9' ? 18 : 12
+export function getPlayerCount(queue: QueueId = '6v6'): number {
+  if (queue === '9v9') {
+    return 18
+  }
+  if (queue === 'ultiduo') {
+    return 6
+  }
+  return 12
 }
 
-export function getQueueConfig(): '6v6' | '9v9' {
-  return queueConfig as '6v6' | '9v9'
+export function getQueueConfig(queue?: QueueId): QueueId {
+  if (queue) {
+    return queue
+  }
+  const env = process.env['QUEUE_CONFIG']
+  if (env && isQueueId(env)) {
+    return env
+  }
+  return '6v6'
 }

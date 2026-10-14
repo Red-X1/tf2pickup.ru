@@ -19,13 +19,13 @@ describe('when the configuration entry is found', () => {
   beforeEach(() => {
     vi.mocked(collections.configuration.findOne).mockResolvedValue({
       key: 'queue.ready_up_timeout',
-      value: 45000,
+      value: { '6v6': 45000, '9v9': 45000, ultiduo: 45000 },
     })
   })
 
   it('should return the value', async () => {
     const result = await get('queue.ready_up_timeout')
-    expect(result).toBe(45000)
+    expect(result).toEqual({ '6v6': 45000, '9v9': 45000, ultiduo: 45000 })
   })
 })
 
@@ -36,6 +36,10 @@ describe('when the configuration entry is not found', () => {
 
   it('should return the default value', async () => {
     const result = await get('queue.ready_up_timeout')
-    expect(result).toBe(40000)
+    expect(result).toEqual({
+      '6v6': 40000,
+      '9v9': 40000,
+      ultiduo: 40000,
+    })
   })
 })

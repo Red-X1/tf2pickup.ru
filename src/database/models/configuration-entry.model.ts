@@ -7,6 +7,13 @@ import { VoiceServerType } from '../../shared/types/voice-server-type'
 import { HideServerInfoMode } from '../../shared/types/hide-server-info-mode'
 import { steamId64 } from '../../shared/schemas/steam-id-64'
 
+const perQueue = <T extends z.ZodType>(value: T) =>
+  z.object({
+    '6v6': value,
+    '9v9': value,
+    ultiduo: value,
+  })
+
 export const configurationSchema = z.discriminatedUnion('key', [
   z.object({
     key: z.literal('discord.guilds'),
@@ -223,18 +230,26 @@ export const configurationSchema = z.discriminatedUnion('key', [
   }),
   z.object({
     key: z.literal('queue.player_skill_threshold'),
-    value: z.number().nullable().default(null),
+    value: perQueue(z.number().nullable()).default({ '6v6': null, '9v9': null, ultiduo: null }),
   }),
   z
     .object({
       key: z.literal('queue.ready_up_timeout'),
-      value: z.number().default(secondsToMilliseconds(40)),
+      value: perQueue(z.number()).default(() => ({
+        '6v6': secondsToMilliseconds(40),
+        '9v9': secondsToMilliseconds(40),
+        ultiduo: secondsToMilliseconds(40),
+      })),
     })
     .describe('Time players have to ready up before they are kicked out of the queue'),
   z
     .object({
       key: z.literal('queue.ready_state_timeout'),
-      value: z.number().default(secondsToMilliseconds(60)),
+      value: perQueue(z.number()).default(() => ({
+        '6v6': secondsToMilliseconds(60),
+        '9v9': secondsToMilliseconds(60),
+        ultiduo: secondsToMilliseconds(60),
+      })),
     })
     .describe(
       'Time the queue stays in the ready-up state before going back to the waiting state, unless all players ready up',
@@ -242,16 +257,20 @@ export const configurationSchema = z.discriminatedUnion('key', [
   z
     .object({
       key: z.literal('queue.map_cooldown'),
-      value: z.number().positive().default(2),
+      value: perQueue(z.number().positive()).default({ '6v6': 2, '9v9': 2, ultiduo: 2 }),
     })
     .describe('How many times the last played map cannot be an option to vote for'),
   z.object({
     key: z.literal('queue.require_player_verification'),
-    value: z.boolean().default(false),
+    value: perQueue(z.boolean()).default({ '6v6': false, '9v9': false, ultiduo: false }),
   }),
   z.object({
     key: z.literal('queue.pre_ready_up_timeout'),
-    value: z.number().positive().default(minutesToMilliseconds(5)),
+    value: perQueue(z.number().positive()).default(() => ({
+      '6v6': minutesToMilliseconds(5),
+      '9v9': minutesToMilliseconds(5),
+      ultiduo: minutesToMilliseconds(5),
+    })),
   }),
   z
     .object({

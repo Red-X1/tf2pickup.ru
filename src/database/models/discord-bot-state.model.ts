@@ -1,4 +1,6 @@
+import type { QueueId } from '../../queue/types/queue-id'
+
 export interface DiscordBotStateModel {
   guildId: string
-  promptMessageId?: string | undefined
+  promptMessageIds?: Partial<Record<QueueId, string>> | undefined
 }

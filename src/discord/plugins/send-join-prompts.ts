@@ -2,7 +2,9 @@ import { secondsToMilliseconds } from 'date-fns'
 import { debounce, retry } from 'es-toolkit'
 import fp from 'fastify-plugin'
 import { events } from '../../events'
-import { queue } from '../../queue-auto'
+import { getQueueConfig } from '../../queue-auto/config'
+import { getSlots } from '../../queue-auto/get-slots'
+import { getMapVoteResults } from '../../queue-auto/get-map-vote-results'
 import { environment } from '../../environment'
 import { EmbedBuilder, type Emoji } from 'discord.js'
 import { configuration } from '../../configuration'
@@ -11,6 +13,7 @@ import { assertClient } from '../assert-client'
 import { logger } from '../../logger'
 import type { Tf2ClassName } from '../../shared/types/tf2-class-name'
 import type { QueueSlotModel } from '../../database/models/queue-slot.model'
+import type { QueueId } from '../../queue/types/queue-id'
 import { collections } from '../../database/collections'
 import { forEachEnabledChannel } from '../for-each-enabled-channel'
 import { getMessage } from '../get-message'
@@ -23,23 +26,30 @@ export default fp(async () => {
     return
   }
 
-  events.on('queue/slots:updated', debounce(safe(refreshPrompt), secondsToMilliseconds(3)))
+  events.on(
+    'queue/slots:updated',
+    debounce(
+      safe(({ queue }: { queue: QueueId }) => refreshPrompt(queue)),
+      secondsToMilliseconds(3),
+    ),
+  )
 })
 
 const clientName = new URL(environment.WEBSITE_URL).hostname
 const iconUrl = `${environment.WEBSITE_URL}/favicon.png`
 
-async function refreshPrompt() {
+async function refreshPrompt(queue: QueueId) {
   await queuePromptMutex.runExclusive(async () => {
-    const slots = await queue.getSlots()
+    const slots = await getSlots(queue)
     const playerCount = slots.filter(slot => !!slot.player).length
     const requiredPlayerCount = slots.length
-    const mapVoteResults = await queue.getMapVoteResults()
+    const mapVoteResults = await getMapVoteResults(queue)
     await forEachEnabledChannel('queuePrompts', async channel => {
       const embed = queuePreview({
+        queue,
         playerCount,
         requiredPlayerCount,
-        gameClassData: slotsToGameClassData(channel.guild.id, slots),
+        gameClassData: slotsToGameClassData(queue, channel.guild.id, slots),
         mapVoteResults,
       })
 
@@ -50,7 +60,7 @@ async function refreshPrompt() {
 
       await retry(
         async () => {
-          const message = await getMessage(channel, state?.promptMessageId)
+          const message = await getMessage(channel, state?.promptMessageIds?.[queue])
           if (message) {
             await message.edit({ embeds: [embed] })
             return
@@ -60,7 +70,7 @@ async function refreshPrompt() {
             const sentMessage = await channel.send({ embeds: [embed] })
             await collections.discordBotState.updateOne(
               { guildId: channel.guild.id },
-              { $set: { promptMessageId: sentMessage.id } },
+              { $set: { [`promptMessageIds.${queue}`]: sentMessage.id } },
               { upsert: true },
             )
           }
@@ -79,6 +89,7 @@ interface QueuePreviewGameClassData {
 }
 
 interface QueuePreviewOptions {
+  queue: QueueId
   playerCount: number
   requiredPlayerCount: number
   gameClassData: QueuePreviewGameClassData[]
@@ -88,8 +99,12 @@ interface QueuePreviewOptions {
 function queuePreview(options: QueuePreviewOptions): EmbedBuilder {
   return new EmbedBuilder()
     .setColor('#f9f9f9')
-    .setTitle(`**${options.playerCount}/${options.requiredPlayerCount} players in the queue!**`)
-    .setDescription(`Join [${clientName}](${environment.WEBSITE_URL}) to play the next game!`)
+    .setTitle(
+      `**[${options.queue}] ${options.playerCount}/${options.requiredPlayerCount} players in the queue!**`,
+    )
+    .setDescription(
+      `Join [${clientName}](${environment.WEBSITE_URL}/${options.queue}) to play the next game!`,
+    )
     .setThumbnail(iconUrl)
     .addFields([
       ...options.gameClassData.map(gameClassData => ({
@@ -117,7 +132,7 @@ function queuePreview(options: QueuePreviewOptions): EmbedBuilder {
     .setTimestamp()
 }
 
-function slotsToGameClassData(guildId: string, slots: QueueSlotModel[]) {
+function slotsToGameClassData(queue: QueueId, guildId: string, slots: QueueSlotModel[]) {
   const playerData = slots
     .filter(slot => Boolean(slot.player))
     .map(slot => ({
@@ -125,7 +140,8 @@ function slotsToGameClassData(guildId: string, slots: QueueSlotModel[]) {
       gameClass: slot.gameClass,
     }))
 
-  return queue.config.classes.map(gameClass => {
+  const config = getQueueConfig(queue)
+  return config.classes.map(gameClass => {
     assertClient(client)
     const emojiName = `tf2${gameClass.name}`
     const guild = client.guilds.cache.get(guildId)
@@ -138,7 +154,7 @@ function slotsToGameClassData(guildId: string, slots: QueueSlotModel[]) {
     return {
       gameClass: gameClass.name,
       emoji,
-      playersRequired: gameClass.count * queue.config.teamCount,
+      playersRequired: gameClass.count * config.teamCount,
       players: playerData.filter(p => p.gameClass === gameClass.name),
     }
   })

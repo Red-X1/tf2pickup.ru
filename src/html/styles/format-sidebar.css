@@ -1,0 +1,231 @@
+@layer components {
+  /* reserve space for the fixed rail so content is not overlapped */
+  @media (width >= theme(--breakpoint-lg)) {
+    body:has(.format-sidebar) {
+      padding-left: 140px;
+      transition: padding-left 150ms ease;
+    }
+
+    html[data-format-sidebar-collapsed='true'] body:has(.format-sidebar) {
+      padding-left: 48px;
+    }
+  }
+
+  .format-sidebar {
+    /* mobile: horizontal strip in flow (not fixed).
+       flex: none — the page column is height-constrained, don't let it squash the strip */
+    flex: none;
+    display: flex;
+    flex-flow: row nowrap;
+    gap: 4px;
+
+    @media (width < theme(--breakpoint-lg)) {
+      overflow-x: auto;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--color-abru-dark-6);
+      background: var(--color-abru-dark-6);
+    }
+
+    @media (width >= theme(--breakpoint-lg)) {
+      /* fixed left rail — does not shift main content */
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 40;
+      flex-flow: column nowrap;
+      gap: 8px;
+      padding: 12px 8px 16px;
+      background: var(--color-abru-dark-6);
+      border-right: 1px solid var(--color-abru-dark-29);
+      transition:
+        width 150ms ease,
+        padding 150ms ease;
+      width: 140px;
+    }
+  }
+
+  /* ── toggle button ─────────────────────────────── */
+  .format-sidebar-toggle {
+    display: none;
+
+    @media (width >= theme(--breakpoint-lg)) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      margin: 0 auto 4px;
+      border-radius: 6px;
+      color: var(--color-abru-light-50);
+      cursor: pointer;
+      flex: none;
+
+      &:hover {
+        color: var(--color-ash);
+        background: var(--color-abru-dark-29);
+      }
+    }
+  }
+
+  .format-sidebar-toggle-expand {
+    display: none;
+  }
+
+  /* collapsed state — driven by [data-format-sidebar-collapsed] on <html>.
+     scoped to desktop: the mobile strip always shows full labels + counts */
+  @media (width >= theme(--breakpoint-lg)) {
+    html[data-format-sidebar-collapsed='true'] .format-sidebar {
+      width: 48px;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    html[data-format-sidebar-collapsed='true'] .format-sidebar-toggle-collapse {
+      display: none;
+    }
+
+    html[data-format-sidebar-collapsed='true'] .format-sidebar-toggle-expand {
+      display: inline-flex;
+    }
+
+    html[data-format-sidebar-collapsed='true'] .format-sidebar-full,
+    html[data-format-sidebar-collapsed='true'] .format-sidebar-count,
+    html[data-format-sidebar-collapsed='true'] .format-sidebar-state,
+    html[data-format-sidebar-collapsed='true'] .format-sidebar-label,
+    html[data-format-sidebar-collapsed='true'] .format-sidebar-indicator {
+      display: none;
+    }
+
+    html[data-format-sidebar-collapsed='true'] .format-sidebar-item {
+      justify-content: center;
+      padding: 8px 4px;
+    }
+  }
+
+  /* ── items ─────────────────────────────────────── */
+  .format-sidebar-items {
+    display: flex;
+    flex-flow: row nowrap;
+    gap: 4px;
+
+    @media (width >= theme(--breakpoint-lg)) {
+      flex-flow: column nowrap;
+      gap: 8px;
+    }
+  }
+
+  .format-sidebar-item {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: var(--color-abru-light-75);
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex: none;
+    text-decoration: none;
+
+    @media (width >= theme(--breakpoint-lg)) {
+      justify-content: space-between;
+      background: transparent;
+      transition: background 100ms ease;
+    }
+
+    &:hover {
+      color: var(--color-ash);
+
+      @media (width >= theme(--breakpoint-lg)) {
+        background: var(--color-abru-dark-29);
+      }
+    }
+
+    &.active {
+      color: var(--color-ash);
+
+      @media (width >= theme(--breakpoint-lg)) {
+        background: var(--color-abru-dark-29);
+        box-shadow: inset 2px 0 0 0 var(--color-accent);
+      }
+
+      @media (width < theme(--breakpoint-lg)) {
+        border-bottom: 2px solid var(--color-accent);
+        border-radius: 0;
+      }
+    }
+
+    &[data-accent='true'] {
+      color: var(--color-accent);
+    }
+  }
+
+  /* short label only visible when collapsed; full name when expanded */
+  .format-sidebar-name {
+    display: none;
+  }
+
+  @media (width >= theme(--breakpoint-lg)) {
+    html[data-format-sidebar-collapsed='true'] .format-sidebar-name {
+      display: inline;
+    }
+  }
+
+  .format-sidebar-full {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .format-sidebar-count {
+    flex: none;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-abru-light-50);
+  }
+
+  .format-sidebar-item.active .format-sidebar-count {
+    color: var(--color-ash);
+  }
+
+  .format-sidebar-state {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-abru-light-25);
+    flex: none;
+
+    &[data-state='ready'] {
+      background: var(--color-accent);
+    }
+
+    &[data-state='launching'] {
+      background: #22c55e;
+    }
+  }
+
+  /* ── site navigation section (desktop only) ────── */
+  .format-sidebar-nav {
+    display: none;
+
+    @media (width >= theme(--breakpoint-lg)) {
+      display: flex;
+      flex-flow: column nowrap;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--color-abru-dark-29);
+    }
+  }
+
+  @media (width >= theme(--breakpoint-lg)) {
+    .format-sidebar-nav-item {
+      justify-content: flex-start;
+    }
+  }
+
+  /* tooltips make sense only for icon-only (collapsed) items */
+  html:not([data-format-sidebar-collapsed='true']) .format-sidebar-nav-item .tooltip {
+    display: none;
+  }
+}

@@ -1,6 +1,6 @@
 import { PlayerRole } from '../../../../../database/models/player.model'
 import { z } from 'zod'
-import { queue } from '../../../../../queue-auto'
+import { allGameClasses } from '../../../../../queue-auto/all-classes'
 import type { Tf2ClassName } from '../../../../../shared/types/tf2-class-name'
 import { players } from '../../../../../players'
 import { steamId64 } from '../../../../../shared/schemas/steam-id-64'
@@ -49,12 +49,10 @@ export default routes(async app => {
           steamId: steamId64,
         }),
         body: z.object({
-          ...queue.config.classes
-            .map(({ name }) => name)
-            .reduce<Partial<Record<`skill.${Tf2ClassName}`, z.ZodNumber>>>(
-              (acc, key) => ({ ...acc, [`skill.${key}`]: z.coerce.number() }),
-              {},
-            ),
+          ...allGameClasses().reduce<Partial<Record<`skill.${Tf2ClassName}`, z.ZodNumber>>>(
+            (acc, key) => ({ ...acc, [`skill.${key}`]: z.coerce.number() }),
+            {},
+          ),
         }),
       },
     },

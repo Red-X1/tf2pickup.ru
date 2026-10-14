@@ -1,6 +1,7 @@
-import { environment } from '../environment'
-import { logger } from '../logger'
+import type { QueueId } from '../queue/types/queue-id'
+import type { QueueConfig } from '../queue/types/queue-config'
 import { queueConfigs } from './configs'
 
-logger.info(`using queue config: ${environment.QUEUE_CONFIG}`)
-export const config = queueConfigs[environment.QUEUE_CONFIG]
+export function getQueueConfig(queue: QueueId): QueueConfig {
+  return queueConfigs[queue]
+}

@@ -9,7 +9,7 @@ import {
   IconEdit,
   IconInputX,
 } from '../../../html/components/icons'
-import { queue } from '../../../queue-auto'
+import { allGameClasses } from '../../../queue-auto/all-classes'
 import { WinLossChart } from './win-loss-chart'
 import { GameClassSkillInput } from '../../../html/components/game-class-skill-input'
 import { players } from '../..'
@@ -33,7 +33,8 @@ export async function AdminToolbox(props: {
   const skillSuggestions = (await configuration.get('games.skill_suggestions'))
     ? makeSkillSuggestions({ player })
     : undefined
-  const compact = queue.config.classes.length > 4
+  const classes = allGameClasses()
+  const compact = classes.length > 4
 
   return (
     <details
@@ -53,7 +54,9 @@ export async function AdminToolbox(props: {
 
       <div class="player-admin-toolbox">
         <div class="admin-toolbox-header">
-          {requireVerification && <PlayerVerifiedCheckbox player={player} />}
+          {Object.values(requireVerification).some(Boolean) && (
+            <PlayerVerifiedCheckbox player={player} />
+          )}
           <BanStatus bans={player.bans} steamId={player.steamId} />
           <a
             href={`/admin/activity-log?player=${player.steamId}`}
@@ -85,18 +88,15 @@ export async function AdminToolbox(props: {
             <h4 class="caption">Skill</h4>
             <form method="post" action={`/players/${player.steamId}/edit/skill`}>
               <div class={['skill-inputs', compact && 'compact']}>
-                {queue.config.classes.map(gameClass => (
+                {classes.map(gameClass => (
                   <GameClassSkillInput
-                    gameClass={gameClass.name}
-                    name={`skill.${gameClass.name}`}
-                    value={player.skill?.[gameClass.name] ?? defaultSkill[gameClass.name] ?? 0}
+                    gameClass={gameClass}
+                    name={`skill.${gameClass}`}
+                    value={player.skill?.[gameClass] ?? defaultSkill[gameClass] ?? 0}
                     step={skillStep}
                   >
-                    <SkillLastUpdated
-                      className={gameClass.name}
-                      skillHistory={player.skillHistory}
-                    />
-                    <SkillSuggestionIndicator direction={skillSuggestions?.get(gameClass.name)} />
+                    <SkillLastUpdated className={gameClass} skillHistory={player.skillHistory} />
+                    <SkillSuggestionIndicator direction={skillSuggestions?.get(gameClass)} />
                   </GameClassSkillInput>
                 ))}
 

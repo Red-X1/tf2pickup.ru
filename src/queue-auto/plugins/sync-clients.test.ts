@@ -72,6 +72,9 @@ vi.mock('../views/html/chat', () => ({
   }),
 }))
 vi.mock('../views/html/is-in-queue', () => ({ IsInQueue: vi.fn().mockResolvedValue('') }))
+vi.mock('../views/html/format-sidebar', () => ({
+  FormatSidebarCounts: vi.fn().mockResolvedValue(''),
+}))
 
 import { events } from '../../events'
 import { players } from '../../players'
@@ -122,6 +125,7 @@ describe('sync-clients', () => {
 
   describe('syncAllSlots', () => {
     it('issues a single batch DB query instead of per-player bySteamId calls', async () => {
+      mockQueueSlotsFindOne.mockResolvedValue({ queue: '6v6', player: { steamId: steamId1 } })
       mockPlayersFind.mockReturnValue({
         toArray: vi.fn().mockResolvedValue([{ steamId: steamId1 }]),
       })
@@ -140,6 +144,7 @@ describe('sync-clients', () => {
     })
 
     it('throws when the player is not in the batch result', async () => {
+      mockQueueSlotsFindOne.mockResolvedValue({ queue: '6v6', player: { steamId: steamId1 } })
       mockPlayersFind.mockReturnValue({ toArray: vi.fn().mockResolvedValue([]) })
       const handler = getHandler<{ steamId: SteamId64; activeGame: number }>(
         'player/activeGame:updated',
@@ -185,26 +190,36 @@ describe('sync-clients', () => {
     }
 
     function makeSocket() {
-      return { player: { steamId: steamId1 }, currentUrl: '/', send: vi.fn() }
+      return {
+        player: { steamId: steamId1 },
+        currentUrl: '/6v6',
+        send: vi.fn(),
+      }
     }
 
     it('shows the ready-up dialog when the queue is in ready state and the player has not readied up', async () => {
       mockGetState.mockResolvedValue(QueueState.ready)
-      mockQueueSlotsFindOne.mockResolvedValue({ player: { steamId: steamId1 }, ready: false })
+      mockQueueSlotsFind.mockReturnValue({
+        toArray: vi
+          .fn()
+          .mockResolvedValue([{ queue: '6v6', player: { steamId: steamId1 }, ready: false }]),
+      })
       const socket = makeSocket()
 
       await getReadyHandler()(socket)
 
-      expect(mockQueueSlotsFindOne).toHaveBeenCalledWith({
+      expect(mockQueueSlotsFind).toHaveBeenCalledWith({
         'player.steamId': steamId1,
         ready: false,
       })
-      expect(vi.mocked(ReadyUpDialog.show)).toHaveBeenCalledWith(steamId1)
+      expect(vi.mocked(ReadyUpDialog.show)).toHaveBeenCalledWith(steamId1, ['6v6'])
     })
 
     it('does not show the ready-up dialog when the player has already readied up', async () => {
       mockGetState.mockResolvedValue(QueueState.ready)
-      mockQueueSlotsFindOne.mockResolvedValue(null)
+      mockQueueSlotsFind.mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([]),
+      })
       const socket = makeSocket()
 
       await getReadyHandler()(socket)
@@ -214,6 +229,11 @@ describe('sync-clients', () => {
 
     it('does not show the ready-up dialog when the queue is not in ready state', async () => {
       mockGetState.mockResolvedValue(QueueState.waiting)
+      mockQueueSlotsFind.mockReturnValue({
+        toArray: vi
+          .fn()
+          .mockResolvedValue([{ queue: '6v6', player: { steamId: steamId1 }, ready: false }]),
+      })
       const socket = makeSocket()
 
       await getReadyHandler()(socket)
@@ -230,9 +250,9 @@ describe('sync-clients', () => {
       mockPlayersFind.mockReturnValue({
         toArray: vi.fn().mockResolvedValue([{ steamId: steamId1 }, { steamId: steamId2 }]),
       })
-      const handler = getHandler<{ slots: unknown[] }>('queue/slots:updated')
+      const handler = getHandler<{ queue: string; slots: unknown[] }>('queue/slots:updated')
 
-      await handler({ slots: [] })
+      await handler({ queue: '6v6', slots: [] })
 
       expect(mockPlayersFind).toHaveBeenCalledOnce()
       expect(mockPlayersFind).toHaveBeenCalledWith(
@@ -244,9 +264,9 @@ describe('sync-clients', () => {
 
     it('does not include unauthenticated clients in the batch query', async () => {
       ;(app.websocketServer.clients as Set<unknown>).add({ player: undefined })
-      const handler = getHandler<{ slots: unknown[] }>('queue/slots:updated')
+      const handler = getHandler<{ queue: string; slots: unknown[] }>('queue/slots:updated')
 
-      await handler({ slots: [] })
+      await handler({ queue: '6v6', slots: [] })
 
       expect(mockPlayersFind).toHaveBeenCalledWith(
         { steamId: { $in: [] } },

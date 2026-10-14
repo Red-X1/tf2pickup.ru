@@ -124,8 +124,11 @@ export default fp(async app => {
   })
 
   async function refreshGamesLink() {
-    const cmp = await GamesLink()
-    app.gateway.broadcast(() => cmp)
+    const [navbarLink, sidebarLink] = await Promise.all([
+      GamesLink(),
+      GamesLink({ variant: 'sidebar' }),
+    ])
+    app.gateway.broadcast(() => [navbarLink, sidebarLink])
   }
   events.on('game:created', refreshGamesLink)
   events.on('game:ended', refreshGamesLink)

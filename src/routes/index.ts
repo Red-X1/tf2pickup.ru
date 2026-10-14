@@ -1,10 +1,8 @@
-import { QueuePage } from '../queue-auto/views/html/queue.page'
 import { routes } from '../utils/routes'
-import disableCache from 'fastify-disablecache'
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export default routes(async app => {
-  await app.register(disableCache)
   app.get('/', async (_req, reply) => {
-    return reply.html(QueuePage())
+    return reply.redirect('/6v6', 302)
   })
 })

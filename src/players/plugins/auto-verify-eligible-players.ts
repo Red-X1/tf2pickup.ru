@@ -25,7 +25,10 @@ export default fp(
           return
         }
 
-        if (await configuration.get('queue.require_player_verification')) {
+        const requirePlayerVerification = await configuration.get(
+          'queue.require_player_verification',
+        )
+        if (Object.values(requirePlayerVerification).some(Boolean)) {
           await verify(after.steamId)
         }
       }),
@@ -38,7 +41,10 @@ export default fp(
           return
         }
 
-        if (!(await configuration.get('queue.require_player_verification'))) {
+        const requirePlayerVerification = await configuration.get(
+          'queue.require_player_verification',
+        )
+        if (!Object.values(requirePlayerVerification).some(Boolean)) {
           return
         }
 

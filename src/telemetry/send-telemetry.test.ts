@@ -15,7 +15,9 @@ vi.mock('../logger', () => ({
 }))
 
 vi.mock('./build-snapshot', () => ({
-  buildSnapshot: vi.fn().mockResolvedValue({ instanceId: 'deadbeef', queueConfig: '6v6' }),
+  buildSnapshot: vi
+    .fn()
+    .mockResolvedValue({ instanceId: 'deadbeef', queues: ['6v6', '9v9', 'ultiduo'] }),
 }))
 
 const fetchMock = vi.fn()
@@ -55,7 +57,10 @@ describe('when telemetry is enabled', () => {
     expect(init.method).toBe('PUT')
     expect(init.headers).toEqual({ 'Content-Type': 'application/json' })
     expect(init.headers).not.toHaveProperty('Authorization')
-    expect(JSON.parse(init.body)).toEqual({ instanceId: 'deadbeef', queueConfig: '6v6' })
+    expect(JSON.parse(init.body)).toEqual({
+      instanceId: 'deadbeef',
+      queues: ['6v6', '9v9', 'ultiduo'],
+    })
   })
 
   describe('and the report is rejected', () => {

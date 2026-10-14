@@ -35,7 +35,11 @@ export async function AcceptRulesDialog(props: { actor?: User | undefined }) {
           </div>
 
           <div class="flex flex-row justify-center">
-            <form action={`/players/${props.actor.player.steamId}/accept-rules`} method="post">
+            <form
+              action={`/players/${props.actor.player.steamId}/accept-rules`}
+              method="post"
+              hx-boost="false"
+            >
               <button
                 type="submit"
                 class="button"

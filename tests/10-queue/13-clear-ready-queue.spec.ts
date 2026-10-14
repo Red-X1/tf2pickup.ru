@@ -7,7 +7,9 @@ const readyUpTimeout = secondsToMilliseconds(20)
 const keys = ['queue.ready_up_timeout', 'queue.ready_state_timeout'] as const
 
 async function configure(page: Page, key: string, value: string) {
-  await page.goto('/admin/view-for-nerds')
+  if (!page.url().includes('/admin/view-for-nerds')) {
+    await page.goto('/admin/view-for-nerds')
+  }
   const input = page.getByLabel(key, { exact: true })
   await input.fill(value)
   await Promise.all([
@@ -16,6 +18,11 @@ async function configure(page: Page, key: string, value: string) {
     ),
     input.press('Enter'),
   ])
+  await page.waitForURL(/\/admin\/view-for-nerds/)
+}
+
+function perQueueValue(value: number): string {
+  return JSON.stringify({ '6v6': value, '9v9': value, ultiduo: value })
 }
 
 let saved: string[] = []
@@ -24,8 +31,8 @@ test.beforeEach(async ({ users }) => {
   const page = await users.getAdmin().page()
   await page.goto('/admin/view-for-nerds')
   saved = await Promise.all(keys.map(key => page.getByLabel(key, { exact: true }).inputValue()))
-  await configure(page, keys[0], readyUpTimeout.toString())
-  await configure(page, keys[1], secondsToMilliseconds(30).toString())
+  await configure(page, keys[0], perQueueValue(readyUpTimeout))
+  await configure(page, keys[1], perQueueValue(secondsToMilliseconds(30)))
 })
 
 test.afterEach(async ({ users }) => {

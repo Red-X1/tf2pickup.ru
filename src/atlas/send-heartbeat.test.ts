@@ -10,7 +10,6 @@ vi.mock('../environment', () => ({
     ATLAS_SECRET: 'supersecret',
     WEBSITE_URL: 'https://tf2pickup.pl',
     WEBSITE_NAME: 'tf2pickup.pl',
-    QUEUE_CONFIG: '6v6',
   },
 }))
 
@@ -88,7 +87,7 @@ describe('when ATLAS_SECRET is set', () => {
       name: 'tf2pickup.pl',
       version: '1.2.3',
       queue: {
-        config: '6v6',
+        configs: ['6v6', '9v9', 'ultiduo'],
         occupied: 7,
         capacity: 12,
       },

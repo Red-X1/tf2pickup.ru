@@ -3,6 +3,7 @@ import { configuration } from '../configuration'
 import { collections } from '../database/collections'
 import { environment } from '../environment'
 import { mapPool } from '../maps/pool'
+import { queueIds } from '../queue/types/queue-id'
 import { servemeTf } from '../serveme-tf'
 import { getPlayedMapsCount } from '../statistics/get-played-maps-count'
 import { version } from '../version'
@@ -255,7 +256,7 @@ export async function buildSnapshot() {
   return {
     instanceId,
     version,
-    queueConfig: environment.QUEUE_CONFIG,
+    queues: [...queueIds],
     features: Object.fromEntries(featureEntries.map(({ key, value }) => [key, value])),
     integrations: Object.fromEntries(integrationEntries.map(({ key, value }) => [key, value])),
     usage: Object.fromEntries(usageEntries.map(({ key, value }) => [key, value])),
