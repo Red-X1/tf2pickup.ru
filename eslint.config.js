@@ -61,6 +61,9 @@ export default ts.config(
       'playwright.config.ts',
       'eslint.config.js',
       '.release-it.js',
+      '.agents/**',
+      'playwright-report/**',
+      'blob-report/**',
     ],
   },
 )

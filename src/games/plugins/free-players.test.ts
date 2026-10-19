@@ -11,9 +11,11 @@ vi.mock('../../events', () => ({
   },
 }))
 
-vi.mock('../../players', () => ({
-  players: {
-    update: vi.fn(),
+vi.mock('../../database/collections', () => ({
+  collections: {
+    players: {
+      updateOne: vi.fn(),
+    },
   },
 }))
 
@@ -31,19 +33,24 @@ vi.mock('../../configuration', () => ({
 }))
 
 import { events } from '../../events'
-import { players } from '../../players'
+import { collections } from '../../database/collections'
 import { tasks } from '../../tasks'
 import plugin from './free-players'
 import type { SteamId64 } from '../../shared/types/steam-id-64'
+import type { GameNumber } from '../../database/models/game.model'
 
-const replacee = '76561198000000001' as SteamId64
+const player = '76561198000000001' as SteamId64
+const gameNumber = 17 as GameNumber
 
 describe('free-players', () => {
-  let freePlayerTask: (params: { player: SteamId64 }) => Promise<void>
+  let freePlayerTask: (params: { player: SteamId64; gameNumber: GameNumber }) => Promise<void>
 
   beforeEach(async () => {
     vi.resetAllMocks()
-    vi.mocked(players.update).mockResolvedValue({} as never)
+    vi.mocked(collections.players.updateOne).mockResolvedValue({
+      modifiedCount: 1,
+      matchedCount: 1,
+    } as never)
     await (plugin as unknown as () => Promise<void>)()
     freePlayerTask = vi
       .mocked(tasks.register)
@@ -53,11 +60,26 @@ describe('free-players', () => {
   })
 
   it('emits player/activeGame:updated with undefined when freePlayer task runs', async () => {
-    await freePlayerTask({ player: replacee })
+    await freePlayerTask({ player, gameNumber })
 
+    expect(collections.players.updateOne).toHaveBeenCalledWith(
+      { steamId: player, activeGame: gameNumber },
+      { $unset: { activeGame: 1 } },
+    )
     expect(events.emit).toHaveBeenCalledWith('player/activeGame:updated', {
-      steamId: replacee,
+      steamId: player,
       activeGame: undefined,
     })
+  })
+
+  it('does nothing when the player already belongs to another game', async () => {
+    vi.mocked(collections.players.updateOne).mockResolvedValue({
+      modifiedCount: 0,
+      matchedCount: 0,
+    } as never)
+
+    await freePlayerTask({ player, gameNumber })
+
+    expect(events.emit).not.toHaveBeenCalled()
   })
 })

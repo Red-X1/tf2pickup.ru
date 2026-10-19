@@ -3,6 +3,7 @@ import { accessMongoDb } from '../fixtures/access-mongo-db'
 import { minutesToMilliseconds, secondsToMilliseconds } from 'date-fns'
 import { launchGame, expect } from '../fixtures/launch-game'
 import { waitForEmptyQueue } from '../fixtures/wait-for-empty-queue'
+import { queueIds } from '../../src/queue/types/queue-id'
 
 // eslint-disable-next-line @typescript-eslint/no-deprecated
 const test = mergeTests(accessMongoDb, launchGame, waitForEmptyQueue)
@@ -14,20 +15,22 @@ test.beforeEach(async ({ db }) => {
     { key: 'queue.pre_ready_up_timeout' },
     {
       $set: {
-        value: { '6v6': readyUpTimeout, '9v9': readyUpTimeout, ultiduo: readyUpTimeout },
+        value: Object.fromEntries(queueIds.map(queue => [queue, readyUpTimeout])),
       },
     },
     { upsert: true },
   )
 })
 
-test('pre-ready up button is visible for logged-in-users @6v6 @9v9', async ({ users }) => {
+test('pre-ready up button is visible for logged-in-users @6v6 @9v9 @4v4 @3v3', async ({
+  users,
+}) => {
   const page = await users.getNext().queuePage()
   await page.goto()
   await expect(page.preReadyUpButton).toBeVisible()
 })
 
-test('pre-ready up button is enabled when a player joins the queue @6v6 @9v9', async ({
+test('pre-ready up button is enabled when a player joins the queue @6v6 @9v9 @4v4 @3v3', async ({
   users,
 }) => {
   const page = await users.getNext().queuePage()
@@ -39,7 +42,7 @@ test('pre-ready up button is enabled when a player joins the queue @6v6 @9v9', a
   await expect(page.preReadyUpButton).toBeDisabled()
 })
 
-test('pre-ready expires @6v6 @9v9', async ({ users }) => {
+test('pre-ready expires @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const page = await users.getNext().queuePage()
   await page.goto()
   await page.joinQueue('soldier-1')
@@ -54,7 +57,7 @@ test('pre-ready expires @6v6 @9v9', async ({ users }) => {
   })
 })
 
-test('pre-ready up readies up when the queue is ready @6v6 @9v9', async ({
+test('pre-ready up readies up when the queue is ready @6v6 @9v9 @4v4 @3v3', async ({
   users,
   players,
   desiredSlots,
@@ -101,7 +104,7 @@ test('pre-ready up readies up when the queue is ready @6v6 @9v9', async ({
   }
 })
 
-test('pre-ready up enables automatically after readying up @6v6 @9v9', async ({
+test('pre-ready up enables automatically after readying up @6v6 @9v9 @4v4 @3v3', async ({
   users,
   players,
   desiredSlots,
@@ -133,7 +136,7 @@ test('pre-ready up enables automatically after readying up @6v6 @9v9', async ({
   }
 })
 
-test('does not ready up if switching classes as 11th player @6v6 @9v9', async ({
+test('does not ready up if switching classes as 11th player @6v6 @9v9 @4v4 @3v3', async ({
   users,
   players,
   desiredSlots,

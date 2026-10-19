@@ -26,6 +26,8 @@ const shortLabel: Record<QueueId, string> = {
   '6v6': '6v6',
   '9v9': '9v9',
   ultiduo: 'ulti',
+  '4v4': '4v4',
+  '3v3': '3v3',
 }
 
 export async function FormatSidebar() {

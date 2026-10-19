@@ -159,6 +159,7 @@ export class GameServerSimulator {
                 ) ?? []
               if (steamId64 && name && team && gameClass) {
                 this.addedPlayers.push(new AddedPlayer(steamId64, name, team, gameClass))
+                console.log(`[sim] sm_game_player_add "${name}" (${this.addedPlayers.length})`)
               }
 
               const response = new RconPacket()
@@ -167,6 +168,9 @@ export class GameServerSimulator {
               response.body = packet.body
               socket.write(response.toBuffer())
             } else if (/^sm_game_player_delall$/.test(packet.body)) {
+              console.log(
+                `[sim] sm_game_player_delall, clearing ${this.addedPlayers.length} players`,
+              )
               this.addedPlayers = []
               const response = new RconPacket()
               response.type = RconPacketType.SERVERDATA_RESPONSE_VALUE
@@ -310,7 +314,13 @@ export class GameServerSimulator {
   }
 
   async connectAllPlayers() {
-    for (const player of this.addedPlayers) {
+    const players = [...this.addedPlayers]
+    for (const player of players) {
+      const current = this.addedPlayers.find(p => p.name === player.name)
+      if (!current) {
+        console.warn(`[sim] player "${player.name}" disappeared before connect (delall?)`)
+        continue
+      }
       await this.playerConnects(player.name)
       await this.playerJoinsTeam(player.name)
     }

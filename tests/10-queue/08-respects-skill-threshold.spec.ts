@@ -1,6 +1,7 @@
 import { expect, mergeTests } from '@playwright/test'
 import { authUsers } from '../fixtures/auth-users'
 import { waitForEmptyQueue } from '../fixtures/wait-for-empty-queue'
+import { queueIds } from '../../src/queue/types/queue-id'
 
 const test = mergeTests(authUsers, waitForEmptyQueue)
 
@@ -10,9 +11,28 @@ test.describe('when player skill threshold is set @6v6', () => {
     await admin.configurePlayerSkillThreshold(2)
   })
 
-  test.afterAll(async ({ users }) => {
-    const admin = await users.getAdmin().adminPage()
-    await admin.configurePlayerSkillThreshold(null)
+  test.afterAll(async ({ users, db }) => {
+    try {
+      const admin = await users.getAdmin().adminPage()
+      await admin.configurePlayerSkillThreshold(null)
+      // Leave no skill behind: the auto-verify plugin verifies eligible players when
+      // 11-respects-player-verification turns verification on, which would break it.
+      await admin.resetPlayerSkill(users.byName('MoonMan').steamId)
+    } finally {
+      // never leave a threshold or a skill behind: either would poison later specs
+      await db.collection('configuration').updateOne(
+        { key: 'queue.player_skill_threshold' },
+        {
+          $set: {
+            value: Object.fromEntries(queueIds.map(queue => [queue, null])),
+          },
+        },
+        { upsert: true },
+      )
+      await db
+        .collection('players')
+        .updateOne({ steamId: users.byName('MoonMan').steamId }, { $unset: { skill: '' } })
+    }
   })
 
   test.describe('and player does not meet the threshold on the given class', () => {

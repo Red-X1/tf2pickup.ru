@@ -12,7 +12,7 @@ launchGame.use({ waitForStage: 'launching' })
 // (16:35:01 / 16:35:02) — it must be recognized as the initial match start
 // doubling, not a mid-game restart, and the score must be kept as-is.
 launchGame(
-  'handles a match start doubled across a second boundary @6v6 @9v9',
+  'handles a match start doubled across a second boundary @6v6 @9v9 @4v4 @3v3',
   async ({ gameNumber, page, gameServer }) => {
     const gamePage = new GamePage(page, gameNumber)
     await gamePage.goto()

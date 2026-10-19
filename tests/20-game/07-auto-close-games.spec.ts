@@ -1,6 +1,6 @@
 import { expect, launchGame as test } from '../fixtures/launch-game'
 
-test('auto-closes games with too many substitute requests @6v6 @9v9', async ({
+test('auto-closes games with too many substitute requests @6v6 @9v9 @4v4 @3v3', async ({
   gameNumber,
   users,
 }) => {

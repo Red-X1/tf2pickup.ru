@@ -11,11 +11,18 @@ export const waitForEmptyQueue = base.extend<{ queueIsEmpty: void }>({
   queueIsEmpty: [
     async ({ page, db }, use) => {
       await db
-        .collection('queueSlots')
+        .collection('queue.slots')
         .updateMany({ queue: getQueueConfig() }, { $set: { player: null, ready: false } })
       await db
         .collection('players')
         .updateMany({}, { $unset: { activeGame: '', preReadyUntil: '' } })
+      await db
+        .collection('queue.state')
+        .updateMany({ queue: getQueueConfig() }, { $set: { state: 'waiting' } })
+      // stale ready-up timers from the previous test would kick players mid-test
+      await db.collection('tasks').deleteMany({
+        name: { $in: ['queue:readyUpTimeout', 'queue:unready', 'preReady:cancel'] },
+      })
       const q = new QueuePage(page)
       await q.goto()
       await q.waitToBeEmpty({ timeout: secondsToMilliseconds(14) })

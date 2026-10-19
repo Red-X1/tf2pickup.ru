@@ -5,7 +5,7 @@ import { queueSlots, getQueueConfig } from '../queue-slots'
 
 test.use({ waitForStage: 'started' })
 
-test('self-substituting players have the same queue cooldown as regular players @6v6 @9v9', async ({
+test('self-substituting players have the same queue cooldown as regular players @6v6 @9v9 @4v4 @3v3', async ({
   users,
   gameNumber,
   gameServer,
@@ -39,7 +39,7 @@ test('self-substituting players have the same queue cooldown as regular players 
   ])
 })
 
-test('substitute players skip the queue cooldown @6v6 @9v9', async ({
+test('substitute players skip the queue cooldown @6v6 @9v9 @4v4 @3v3', async ({
   users,
   gameNumber,
   gameServer,
@@ -55,8 +55,9 @@ test('substitute players skip the queue cooldown @6v6 @9v9', async ({
   await ghostWalkersGamePage.replacePlayer('Mayflower')
   await expect(ghostWalkersGamePage.gameEvent('GhostWalker replaced Mayflower')).toBeVisible()
 
-  const slitherTuftsQueuePage = await users.byName('SlitherTuft').queuePage()
-  await slitherTuftsQueuePage.goto()
+  // Polemic is a non-medic roster player in every supported format
+  const polemicsQueuePage = await users.byName('Polemic').queuePage()
+  await polemicsQueuePage.goto()
 
   const ghostWalkersQueuePage = await ghostWalker.queuePage()
   await ghostWalkersQueuePage.goto()
@@ -68,13 +69,13 @@ test('substitute players skip the queue cooldown @6v6 @9v9', async ({
   await expect(ghostWalkersQueuePage.goBackToGameLink()).not.toBeVisible({
     timeout: secondsToMilliseconds(15),
   })
-  // a regular player (SlitherTuft, demoman) is still on their cooldown at that point
+  // a regular player (Polemic) is still on their cooldown at that point
   await Promise.all([
-    expect(slitherTuftsQueuePage.goBackToGameLink()).toBeVisible({
+    expect(polemicsQueuePage.goBackToGameLink()).toBeVisible({
       timeout: secondsToMilliseconds(1),
     }),
     ...Array.from(queueSlots(getQueueConfig())).map(slot =>
-      expect(slitherTuftsQueuePage.slot(slot).joinButton()).toBeDisabled({
+      expect(polemicsQueuePage.slot(slot).joinButton()).toBeDisabled({
         timeout: secondsToMilliseconds(1),
       }),
     ),

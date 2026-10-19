@@ -217,6 +217,72 @@
         }
       }
 
+      &.config-4v4.team-blu {
+        grid-area: slotsBlu;
+        grid-template-areas:
+          'bluScout1'
+          'bluSoldier1'
+          'bluDemoman1'
+          'bluMedic1';
+
+        @media (width >= theme(--breakpoint-lg)) {
+          border-radius: 0 0 0 8px;
+
+          .slot {
+            flex-flow: row-reverse nowrap;
+
+            .player-link {
+              justify-content: flex-end;
+            }
+          }
+        }
+      }
+
+      &.config-4v4.team-red {
+        grid-area: slotsRed;
+        grid-template-areas:
+          'redScout1'
+          'redSoldier1'
+          'redDemoman1'
+          'redMedic1';
+
+        @media (width >= theme(--breakpoint-lg)) {
+          border-radius: 0 0 8px 0;
+        }
+      }
+
+      &.config-3v3.team-blu {
+        grid-area: slotsBlu;
+        grid-template-areas:
+          'bluScout1'
+          'bluSoldier1'
+          'bluMedic1';
+
+        @media (width >= theme(--breakpoint-lg)) {
+          border-radius: 0 0 0 8px;
+
+          .slot {
+            flex-flow: row-reverse nowrap;
+
+            .player-link {
+              justify-content: flex-end;
+            }
+          }
+        }
+      }
+
+      &.config-3v3.team-red {
+        grid-area: slotsRed;
+        grid-template-areas:
+          'redScout1'
+          'redSoldier1'
+          'redMedic1';
+
+        @media (width >= theme(--breakpoint-lg)) {
+          border-radius: 0 0 8px 0;
+        }
+      }
+
       .slot {
         @apply transition-colors;
         @apply duration-75;

@@ -8,12 +8,23 @@ test.beforeAll(async ({ users }) => {
   await admin.configureHideServerInfo('never')
 })
 
-test.afterAll(async ({ users }) => {
-  const admin = await users.getAdmin().adminPage()
-  await admin.configureHideServerInfo('auto')
+test.afterAll(async ({ users, db }) => {
+  try {
+    const admin = await users.getAdmin().adminPage()
+    await admin.configureHideServerInfo('auto')
+  } finally {
+    // never leave server info hidden from spectators: later specs expect 'auto'
+    await db
+      .collection('configuration')
+      .updateOne(
+        { key: 'games.hide_server_info_from_spectators' },
+        { $set: { value: 'auto' } },
+        { upsert: true },
+      )
+  }
 })
 
-test('shows the stv connect string to spectators when enabled @6v6 @9v9', async ({
+test('shows the stv connect string to spectators when enabled @6v6 @9v9 @4v4 @3v3', async ({
   gameNumber,
   page,
 }) => {

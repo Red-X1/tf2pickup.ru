@@ -1,13 +1,16 @@
 import { authUsers, expect } from '../fixtures/auth-users'
 
-authUsers('chat mutes tab is empty for a player with no mutes @6v6 @9v9', async ({ users }) => {
-  const player = users.byName('AstraGirl')
-  const adminPage = await users.getAdmin().adminPage()
-  await adminPage.page.goto(`/players/${player.steamId}/edit/chat-mutes`)
-  await expect(adminPage.page.getByText('No chat mutes')).toBeVisible()
-})
+authUsers(
+  'chat mutes tab is empty for a player with no mutes @6v6 @9v9 @4v4 @3v3',
+  async ({ users }) => {
+    const player = users.byName('AstraGirl')
+    const adminPage = await users.getAdmin().adminPage()
+    await adminPage.page.goto(`/players/${player.steamId}/edit/chat-mutes`)
+    await expect(adminPage.page.getByText('No chat mutes')).toBeVisible()
+  },
+)
 
-authUsers('admin can add a chat mute @6v6 @9v9', async ({ users }) => {
+authUsers('admin can add a chat mute @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const player = users.byName('AstraGirl')
   const adminPage = await users.getAdmin().adminPage()
 
@@ -19,7 +22,7 @@ authUsers('admin can add a chat mute @6v6 @9v9', async ({ users }) => {
 })
 
 authUsers(
-  'muted player sees disabled chat input and can type again after revocation @6v6 @9v9',
+  'muted player sees disabled chat input and can type again after revocation @6v6 @9v9 @4v4 @3v3',
   async ({ users }) => {
     const player = users.byName('AstraGirl')
     const playerPage = await player.page()

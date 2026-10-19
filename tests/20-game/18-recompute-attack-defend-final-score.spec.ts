@@ -11,7 +11,7 @@ launchGame.use({ waitForStage: 'started' })
 // round and takes the map 0:1, matching logs.tf. This is the swap case the
 // earlier capture-counting approach scored backwards.
 launchGame(
-  'recomputes the final score on an attack/defend map after a team swap @6v6 @9v9',
+  'recomputes the final score on an attack/defend map after a team swap @6v6 @9v9 @4v4 @3v3',
   async ({ gameNumber, page, gameServer }) => {
     const gamePage = new GamePage(page, gameNumber)
     await gamePage.goto()

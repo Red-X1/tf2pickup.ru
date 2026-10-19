@@ -2,7 +2,7 @@ import { secondsToMilliseconds } from 'date-fns'
 import { expect, launchGame as test } from '../fixtures/launch-game'
 import { QueuePage } from '../pages/queue.page'
 
-test('redirect player to launched game @6v6 @9v9', async ({
+test('redirect player to launched game @6v6 @9v9 @4v4 @3v3', async ({
   users,
   players,
   desiredSlots,
@@ -59,7 +59,7 @@ test('redirect player to launched game @6v6 @9v9', async ({
   const gameNumber = Number(matches[1])
 
   await redirectedQueuePage.page.goBack()
-  await redirectedQueuePage.page.waitForURL(/\/(6v6|9v9|ultiduo)$/)
+  await redirectedQueuePage.page.waitForURL(/\/(6v6|9v9|ultiduo|4v4|3v3)$/)
   await expect(redirectedQueuePage.goBackToGameLink()).toBeVisible()
 
   // kill the game and free the game server, as the gameNumber fixture does
@@ -73,4 +73,9 @@ test('redirect player to launched game @6v6 @9v9', async ({
     })
     .toBe(true)
   await (await users.getAdmin().adminPage()).freeStaticGameServer()
+
+  // this spec bypasses the gameNumber fixture, so it has to dispose users itself
+  for (const user of players) {
+    await user.dispose()
+  }
 })

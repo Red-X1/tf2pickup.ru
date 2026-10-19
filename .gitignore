@@ -9,6 +9,7 @@ NOTES.md
 skills-lock.json
 dist
 /test-results/
+/.e2e-logs/
 /playwright-report/
 /blob-report/
 /playwright/.cache/

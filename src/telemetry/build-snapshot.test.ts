@@ -90,7 +90,7 @@ const values: Record<string, unknown> = {
   'serveme_tf.preferred_region': 'eu',
   'games.cooldown_levels': [{ level: 0, banLengthMs: 1 }],
   'games.default_player_skill': { soldier: 5 },
-  'games.execute_extra_commands': [],
+  'games.execute_extra_commands': { '6v6': [], '9v9': [], ultiduo: [], '4v4': [], '3v3': [] },
 }
 
 const defaults: Record<string, unknown> = {
@@ -110,7 +110,7 @@ describe('buildSnapshot', () => {
     const snapshot = await buildSnapshot()
     expect(snapshot.instanceId).toBe('deadbeef')
     expect(snapshot.version).toBe('1.2.3')
-    expect(snapshot.queues).toEqual(['6v6', '9v9', 'ultiduo'])
+    expect(snapshot.queues).toEqual(['6v6', '9v9', 'ultiduo', '4v4', '3v3'])
   })
 
   it('reports allow-listed configuration values', async () => {
@@ -145,6 +145,21 @@ describe('buildSnapshot', () => {
     expect(snapshot.features['games.cooldown_levels.customized']).toBe(false)
     expect(snapshot.features['games.default_player_skill.customized']).toBe(true)
     expect(snapshot.features['games.execute_extra_commands.set']).toBe(false)
+
+    const emptyExtraCommands = values['games.execute_extra_commands']
+    values['games.execute_extra_commands'] = {
+      '6v6': ['sv_cheats 0'],
+      '9v9': [],
+      ultiduo: [],
+      '4v4': [],
+      '3v3': [],
+    }
+    try {
+      const snapshot2 = await buildSnapshot()
+      expect(snapshot2.features['games.execute_extra_commands.set']).toBe(true)
+    } finally {
+      values['games.execute_extra_commands'] = emptyExtraCommands
+    }
   })
 
   it('reports usage counters', async () => {

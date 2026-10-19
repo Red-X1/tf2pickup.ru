@@ -1,15 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { makeSkillSuggestions } from './make-skill-suggestions'
 import { Tf2ClassName } from '../shared/types/tf2-class-name'
 import type { SteamId64 } from '../shared/types/steam-id-64'
-
-vi.mock('../queue-auto', () => ({
-  queue: {
-    config: {
-      classes: [{ name: 'scout' }, { name: 'soldier' }],
-    },
-  },
-}))
 
 const mockActor = '76561198000000000' as SteamId64
 

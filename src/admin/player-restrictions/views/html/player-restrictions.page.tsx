@@ -145,7 +145,6 @@ async function PlayerSkillThreshold() {
                   id={`playerSkillThreshold.${queue}`}
                   name={`playerSkillThreshold.${queue}`}
                   value={playerSkillThreshold[queue]?.toString()}
-                  disabled={!enabled}
                 />
               </dd>
             </dl>

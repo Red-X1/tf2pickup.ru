@@ -1,7 +1,7 @@
 import { expect, authUsers as test } from '../fixtures/auth-users'
 import { loremIpsum } from 'lorem-ipsum'
 
-test('chat is not visible for unauthenticated users @6v6 @9v9', async ({ page }) => {
+test('chat is not visible for unauthenticated users @6v6 @9v9 @4v4 @3v3', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Chat' }).click()
   await expect(page.getByText('You need to sign in to see the chat.')).toBeVisible()
@@ -9,7 +9,7 @@ test('chat is not visible for unauthenticated users @6v6 @9v9', async ({ page })
   await expect(page.getByRole('button', { name: 'Send message' })).not.toBeVisible()
 })
 
-test('chat is visible for authenticated users @6v6 @9v9', async ({ users }) => {
+test('chat is visible for authenticated users @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const page = await users.getNext().page()
   await page.goto('/')
   await page.getByRole('button', { name: 'Chat' }).click()
@@ -17,7 +17,7 @@ test('chat is visible for authenticated users @6v6 @9v9', async ({ users }) => {
   await expect(page.getByRole('button', { name: 'Send message' })).toBeVisible()
 })
 
-test('users are able to send messages to chat @6v6 @9v9', async ({ users }) => {
+test('users are able to send messages to chat @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   for (const user of users) {
     const page = await user.page()
     await page.goto('/')
@@ -41,7 +41,7 @@ test('users are able to send messages to chat @6v6 @9v9', async ({ users }) => {
   }
 })
 
-test('player mentions are rendered as profile links @6v6 @9v9', async ({ users }) => {
+test('player mentions are rendered as profile links @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const [sender, receiver] = users.getMany(2)
 
   for (const user of [sender, receiver]) {
@@ -70,7 +70,7 @@ test('player mentions are rendered as profile links @6v6 @9v9', async ({ users }
   }
 })
 
-test('mention completion dropdown appears when typing @ @6v6 @9v9', async ({ users }) => {
+test('mention completion dropdown appears when typing @ @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const [user1, user2] = users.getMany(2)
 
   // Both users must be on the page so they appear in online players
@@ -93,7 +93,7 @@ test('mention completion dropdown appears when typing @ @6v6 @9v9', async ({ use
   await expect(dropdown.locator('li', { hasText: user2.playerName })).toBeVisible()
 })
 
-test('mention completion filters by typed query @6v6 @9v9', async ({ users }) => {
+test('mention completion filters by typed query @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const [user1, user2] = users.getMany(2)
 
   for (const user of [user1, user2]) {
@@ -113,7 +113,9 @@ test('mention completion filters by typed query @6v6 @9v9', async ({ users }) =>
   await expect(dropdown.locator('li', { hasText: user2.playerName })).toBeVisible()
 })
 
-test('mention completion keyboard navigation and Enter accepts @6v6 @9v9', async ({ users }) => {
+test('mention completion keyboard navigation and Enter accepts @6v6 @9v9 @4v4 @3v3', async ({
+  users,
+}) => {
   const [user1, user2] = users.getMany(2)
 
   // Both users must be online so dropdown has at least 2 items
@@ -150,7 +152,7 @@ test('mention completion keyboard navigation and Enter accepts @6v6 @9v9', async
   )
 })
 
-test('mention completion Escape closes dropdown @6v6 @9v9', async ({ users }) => {
+test('mention completion Escape closes dropdown @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const [user1, user2] = users.getMany(2)
 
   // Both users must be online so dropdown has items to show
@@ -172,7 +174,7 @@ test('mention completion Escape closes dropdown @6v6 @9v9', async ({ users }) =>
   await expect(dropdown).toBeHidden()
 })
 
-test('mention completion click accepts selection @6v6 @9v9', async ({ users }) => {
+test('mention completion click accepts selection @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const [user1, user2] = users.getMany(2)
 
   for (const user of [user1, user2]) {
@@ -197,7 +199,7 @@ test('mention completion click accepts selection @6v6 @9v9', async ({ users }) =
   await expect(input).toHaveValue(new RegExp(`@${user2.playerName}`))
 })
 
-test('mention completion round-trip: complete and send @6v6 @9v9', async ({ users }) => {
+test('mention completion round-trip: complete and send @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const [sender, receiver] = users.getMany(2)
 
   for (const user of [sender, receiver]) {
@@ -237,7 +239,7 @@ test('mention completion round-trip: complete and send @6v6 @9v9', async ({ user
   }
 })
 
-test('delete button is not visible for non-admin users @6v6 @9v9', async ({ users }) => {
+test('delete button is not visible for non-admin users @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const [admin, nonAdmin] = [users.getAdmin(), users.getNext(u => !u.isAdmin)]
 
   for (const user of [admin, nonAdmin]) {
@@ -259,7 +261,7 @@ test('delete button is not visible for non-admin users @6v6 @9v9', async ({ user
   await expect(message.getByTitle('Delete message')).not.toBeVisible()
 })
 
-test('delete button is visible on hover for admin users @6v6 @9v9', async ({ users }) => {
+test('delete button is visible on hover for admin users @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const [admin, nonAdmin] = [users.getAdmin(), users.getNext(u => !u.isAdmin)]
 
   for (const user of [admin, nonAdmin]) {
@@ -281,7 +283,7 @@ test('delete button is visible on hover for admin users @6v6 @9v9', async ({ use
   await expect(message.getByTitle('Delete message')).toBeVisible()
 })
 
-test('admin can delete a chat message @6v6 @9v9', async ({ users }) => {
+test('admin can delete a chat message @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const [admin, nonAdmin] = [users.getAdmin(), users.getNext(u => !u.isAdmin)]
 
   for (const user of [admin, nonAdmin]) {
@@ -307,7 +309,7 @@ test('admin can delete a chat message @6v6 @9v9', async ({ users }) => {
   await expect(nonAdminPage.getByText(sentence)).not.toBeVisible()
 })
 
-test('links inside chat messages are clickable @6v6 @9v9', async ({ users }) => {
+test('links inside chat messages are clickable @6v6 @9v9 @4v4 @3v3', async ({ users }) => {
   const [sender, receiver] = users.getMany(2)
 
   for (const user of [sender, receiver]) {

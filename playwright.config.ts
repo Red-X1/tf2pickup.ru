@@ -23,6 +23,8 @@ export default defineConfig({
   use: {
     baseURL: process.env.CI ? 'https://www.localhost' : 'http://localhost:3000',
     trace: 'retain-on-failure',
+    // some networks drop UDP 443, making chromium's HTTP/3 attempts hang page loads
+    launchOptions: { args: ['--disable-quic'] },
   },
 
   projects: [

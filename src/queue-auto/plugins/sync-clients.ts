@@ -24,6 +24,7 @@ import type { AppWebSocket } from '../../websocket/types'
 import { players } from '../../players'
 import { errors } from '../../errors'
 import { getState } from '../../queue/get-state'
+import { queueIds } from '../../queue/types/queue-id'
 import type { QueueId } from '../../queue/types/queue-id'
 import { queueUrl, queueUrls } from '../../queue/types/queue-url'
 import { FormatSidebarCounts } from '../views/html/format-sidebar'
@@ -31,11 +32,17 @@ import { FormatSidebarCounts } from '../views/html/format-sidebar'
 export default fp(
   // eslint-disable-next-line @typescript-eslint/require-await
   async app => {
-    async function syncAllSlots(queue: QueueId, ...clients: SteamId64[]) {
-      const [slots, actorMap] = await Promise.all([
-        collections.queueSlots.find({ queue }).toArray(),
-        fetchActorMap(clients),
-      ])
+    type QueueSlotActor = Pick<
+      PlayerModel,
+      'steamId' | 'bans' | 'activeGame' | 'skill' | 'verified' | 'roles'
+    >
+
+    async function syncAllSlots(
+      queue: QueueId,
+      actorMap: Map<SteamId64, QueueSlotActor>,
+      ...clients: SteamId64[]
+    ) {
+      const slots = await collections.queueSlots.find({ queue }).toArray()
       for (const client of clients) {
         const actor = actorMap.get(client)
         if (!actor) {
@@ -49,6 +56,11 @@ export default fp(
             Promise.all(slots.map(slot => QueueSlot({ slot, actor }))).then(arr => arr.join()),
           )
       }
+    }
+
+    async function syncAllSlotsForPlayer(steamId: SteamId64) {
+      const actorMap = await fetchActorMap([steamId])
+      await Promise.all(queueIds.map(queue => syncAllSlots(queue, actorMap, steamId)))
     }
 
     async function findReadyQueuesForPlayer(steamId: SteamId64): Promise<QueueId[]> {
@@ -151,10 +163,9 @@ export default fp(
           .to({ player: steamId })
           .to({ urls: queueUrls })
           .send(() => cmp)
-        const slot = await collections.queueSlots.findOne({ 'player.steamId': steamId })
-        if (slot) {
-          await syncAllSlots(slot.queue, steamId)
-        }
+        // sync across all queues: at game end the player has no queue slot left,
+        // yet their join buttons must be re-enabled
+        await syncAllSlotsForPlayer(steamId)
       }),
     )
 
@@ -183,8 +194,10 @@ export default fp(
           FormatSidebarCounts(),
         ])
 
+        // scoped to the queue page: slot ids repeat across queue modes, so a
+        // global broadcast would id-swap foreign slots into other modes' pages
         const url = queueUrl(queue)
-        app.gateway.broadcast(player => {
+        app.gateway.to({ url }).send(player => {
           const actor = player ? actorMap.get(player) : undefined
           return Promise.all(slots.map(slot => QueueSlot({ slot, actor }))).then(items => [
             ...items,
@@ -273,6 +286,7 @@ export default fp(
         const actorMap = await fetchActorMap(recipientIds)
         app.gateway
           .to({ players: recipientIds })
+          .to({ url: queueUrl(queue) })
           .send(actor => QueueSlot({ slot, actor: actorMap.get(actor!) }))
       }),
     )
@@ -293,6 +307,7 @@ export default fp(
         for (const slot of slots) {
           app.gateway
             .to({ players: recipients })
+            .to({ url: queueUrl(queue) })
             .send(actor => QueueSlot({ slot, actor: actorMap.get(actor!) }))
         }
       }),
@@ -316,6 +331,7 @@ export default fp(
         const actorMap = await fetchActorMap(recipientIds)
         app.gateway
           .to({ players: recipientIds })
+          .to({ url: queueUrl(queue) })
           .send(actor => QueueSlot({ slot, actor: actorMap.get(actor!) }))
       }),
     )
@@ -343,10 +359,7 @@ export default fp(
       app.gateway.to({ players: [player] }).send(() => cmp)
 
       setImmediate(async () => {
-        const slot = await collections.queueSlots.findOne({ 'player.steamId': player })
-        if (slot) {
-          await syncAllSlots(slot.queue, player)
-        }
+        await syncAllSlotsForPlayer(player)
       })
     }
     events.on(

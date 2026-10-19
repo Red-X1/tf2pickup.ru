@@ -8,7 +8,7 @@ launchGame.use({ waitForStage: 'started' })
 // map). TF2 reports the final score correctly here (2:3), both teams capture
 // points, so the score must be tracked as-is and never recomputed.
 launchGame(
-  'keeps a correctly reported 5cp final score @6v6 @9v9',
+  'keeps a correctly reported 5cp final score @6v6 @9v9 @4v4 @3v3',
   async ({ gameNumber, page, gameServer }) => {
     const gamePage = new GamePage(page, gameNumber)
     await gamePage.goto()

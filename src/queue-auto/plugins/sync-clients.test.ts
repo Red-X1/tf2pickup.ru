@@ -89,16 +89,22 @@ function makeApp() {
   const mockSend = vi.fn()
   const mockTo = vi.fn()
   mockTo.mockReturnValue({ to: mockTo, send: mockSend })
+  const mockBroadcast = vi.fn()
   return {
-    gateway: {
-      to: mockTo,
-      broadcast: vi.fn(),
-      on: vi.fn(),
-    },
-    websocketServer: {
-      clients: new Set(),
-    },
-  } as unknown as FastifyInstance
+    app: {
+      gateway: {
+        to: mockTo,
+        broadcast: mockBroadcast,
+        on: vi.fn(),
+      },
+      websocketServer: {
+        clients: new Set(),
+      },
+    } as unknown as FastifyInstance,
+    mockSend,
+    mockTo,
+    mockBroadcast,
+  }
 }
 
 type Handler<T> = (params: T) => Promise<void>
@@ -111,10 +117,13 @@ function getHandler<T>(event: string): Handler<T> {
 
 describe('sync-clients', () => {
   let app: FastifyInstance
+  let mockTo: ReturnType<typeof vi.fn>
+  let mockSend: ReturnType<typeof vi.fn>
+  let mockBroadcast: ReturnType<typeof vi.fn>
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    app = makeApp()
+    ;({ app, mockTo, mockSend, mockBroadcast } = makeApp())
     mockQueueSlotsFind.mockReturnValue({ toArray: vi.fn().mockResolvedValue([]) })
     mockQueueSlotsFindOne.mockResolvedValue(null)
     mockPlayersCollectionFindOne.mockResolvedValue(null)
@@ -168,15 +177,34 @@ describe('sync-clients', () => {
       mockPlayersFind.mockReturnValue({
         toArray: vi.fn().mockResolvedValue([{ steamId: steamId1 }, { steamId: steamId2 }]),
       })
-      const handler = getHandler<{ target: SteamId64 }>('queue/friendship:created')
+      const handler = getHandler<{ queue: string; target: SteamId64 }>('queue/friendship:created')
 
-      await handler({ target: steamId1 })
+      await handler({ queue: '6v6', target: steamId1 })
 
       expect(mockPlayersFind).toHaveBeenCalledOnce()
       expect(mockPlayersFind).toHaveBeenCalledWith(
         { steamId: { $in: [steamId1, steamId2] } },
         expect.objectContaining({ projection: expect.any(Object) }),
       )
+    })
+
+    it('scopes friendship slot updates to the queue page', async () => {
+      mockQueueSlotsFindOne.mockResolvedValueOnce({ player: { steamId: steamId1 } })
+      mockQueueSlotsFind.mockReturnValueOnce({
+        toArray: vi
+          .fn()
+          .mockResolvedValue([{ player: { steamId: steamId2 }, canMakeFriendsWith: [steamId1] }]),
+      })
+      mockPlayersFind.mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([{ steamId: steamId1 }, { steamId: steamId2 }]),
+      })
+      const handler = getHandler<{ queue: string; target: SteamId64 }>('queue/friendship:created')
+
+      await handler({ queue: '6v6', target: steamId1 })
+
+      expect(mockTo).toHaveBeenCalledWith({ players: [steamId2] })
+      expect(mockTo).toHaveBeenCalledWith({ url: '/6v6' })
+      expect(mockSend).toHaveBeenCalled()
     })
   })
 
@@ -272,6 +300,28 @@ describe('sync-clients', () => {
         { steamId: { $in: [] } },
         expect.objectContaining({ projection: expect.any(Object) }),
       )
+    })
+
+    it('sends slot fragments only to the queue page, never as a global broadcast', async () => {
+      const handler = getHandler<{ queue: string; slots: unknown[] }>('queue/slots:updated')
+
+      await handler({ queue: '6v6', slots: [] })
+
+      expect(mockTo).toHaveBeenCalledWith({ url: '/6v6' })
+      expect(mockSend).toHaveBeenCalled()
+      // the only global broadcast left is the sidebar player counts
+      expect(mockBroadcast).toHaveBeenCalledTimes(1)
+    })
+
+    it('scopes slot fragments to foreign queue pages, not the emitting one', async () => {
+      const handler = getHandler<{ queue: string; slots: unknown[] }>('queue/slots:updated')
+
+      await handler({ queue: '9v9', slots: [] })
+
+      expect(mockTo).toHaveBeenCalledWith({ url: '/9v9' })
+      // avoid `expect(mockTo).not...` — vitest's `.not` type is broken on mocks here
+      const scopedUrls = mockTo.mock.calls.flat().filter(arg => arg?.url !== undefined)
+      expect(scopedUrls.filter(arg => arg.url === '/6v6')).toHaveLength(0)
     })
   })
 })

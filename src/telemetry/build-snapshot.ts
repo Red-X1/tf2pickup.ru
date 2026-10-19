@@ -184,7 +184,7 @@ export async function buildSnapshot() {
     },
     {
       key: 'games.execute_extra_commands.set',
-      value: extraCommands.length > 0,
+      value: Object.values(extraCommands).some(commands => commands.length > 0),
       label: 'Extra rcon commands',
       group: 'Customization',
     },

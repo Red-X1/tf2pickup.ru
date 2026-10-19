@@ -1,6 +1,7 @@
 import { millisecondsToSeconds } from 'date-fns'
 import { configuration } from '../../../../configuration'
 import { IconMinus, IconPlus } from '../../../../html/components/icons'
+import { queueIds } from '../../../../queue/types/queue-id'
 import { LogsTfUploadMethod } from '../../../../shared/types/logs-tf-upload-method'
 import { Admin } from '../../../views/html/admin'
 import { SaveButton } from '../../../views/html/save-button'
@@ -8,33 +9,37 @@ import { durationUnit } from '../../duration-unit'
 import { GameServerCommandPreview } from './game-server-command-preview'
 
 export async function GamesPage() {
-  const whitelistId = await configuration.get('games.whitelist_id')
+  const whitelistIds = await configuration.get('games.whitelist_id')
   const joinGameServerTimeout = await configuration.get('games.join_gameserver_timeout')
   const rejoinGameServerTimeout = await configuration.get('games.rejoin_gameserver_timeout')
   const executeExtraCommands = await configuration.get('games.execute_extra_commands')
   const logsTfUploadMethod = await configuration.get('games.logs_tf_upload_method')
   const cooldownLevels = await configuration.get('games.cooldown_levels')
 
-  const safeExecuteExtraCommands = executeExtraCommands.join('\n')
-
   return (
     <Admin activePage="games">
       <form action="" method="post">
         <div class="admin-panel-set flex flex-col gap-4">
-          <dl>
-            <dt>
-              <label for="whitelistId">Whitelist ID</label>
-            </dt>
-            <dd>
-              <input
-                type="text"
-                name="whitelistId"
-                value={whitelistId ?? ''}
-                id="whitelistId"
-                class="col-span-3"
-              />
-            </dd>
-          </dl>
+          <div class="flex flex-col gap-2">
+            {queueIds.map(queue => (
+              <dl>
+                <dt>
+                  <label for={`whitelistId.${queue}`}>
+                    Whitelist ID <span class="capitalize">({queue})</span>
+                  </label>
+                </dt>
+                <dd>
+                  <input
+                    type="text"
+                    name={`whitelistId.${queue}`}
+                    value={whitelistIds[queue] ?? ''}
+                    id={`whitelistId.${queue}`}
+                    class="col-span-3"
+                  />
+                </dd>
+              </dl>
+            ))}
+          </div>
 
           <dl>
             <dt>
@@ -80,20 +85,33 @@ export async function GamesPage() {
             </dd>
           </dl>
 
-          <dl>
-            <dt>
-              <label for="executeExtraCommands">Execute extra commands</label>
-            </dt>
-            <dd class="flex flex-col">
-              <textarea rows="3" id="executeExtraCommands" name="executeExtraCommands">
-                {safeExecuteExtraCommands}
-              </textarea>
-              <span class="text-abru-light-75 text-sm">
-                Extra commands to execute on the gameserver before the match starts. One command per
-                line.
-              </span>
-            </dd>
-          </dl>
+          {queueIds.map(queue => (
+            <dl>
+              <dt>
+                <label for={`executeExtraCommands.${queue}`}>
+                  Execute extra commands <span class="capitalize">({queue})</span>
+                </label>
+              </dt>
+              <dd class="flex flex-col gap-2">
+                <textarea
+                  rows="3"
+                  id={`executeExtraCommands.${queue}`}
+                  name={`executeExtraCommands.${queue}`}
+                >
+                  {executeExtraCommands[queue].join('\n')}
+                </textarea>
+                <GameServerCommandPreview
+                  executeExtraCommands={executeExtraCommands[queue]}
+                  logsTfUploadMethod={logsTfUploadMethod}
+                />
+                <span class="text-abru-light-75 text-sm">
+                  Extra commands to execute on the gameserver before a {queue} match starts. One
+                  command per line. The preview shows the full command sequence for this queue,
+                  reflecting the saved configuration above.
+                </span>
+              </dd>
+            </dl>
+          ))}
 
           <dl>
             <dt>
@@ -117,21 +135,6 @@ export async function GamesPage() {
                   Gameserver - logs will be uploaded by the logs.tf sourcemod plugin
                 </option>
               </select>
-            </dd>
-          </dl>
-
-          <dl>
-            <dt>Game server startup commands</dt>
-            <dd class="flex flex-col">
-              <GameServerCommandPreview
-                whitelistId={whitelistId}
-                executeExtraCommands={executeExtraCommands}
-                logsTfUploadMethod={logsTfUploadMethod}
-              />
-              <span class="text-abru-light-75 text-sm">
-                Commands executed on the game server when a game starts, in order. Reflects the
-                saved configuration above.
-              </span>
             </dd>
           </dl>
 

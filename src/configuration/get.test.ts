@@ -40,6 +40,8 @@ describe('when the configuration entry is not found', () => {
       '6v6': 40000,
       '9v9': 40000,
       ultiduo: 40000,
+      '4v4': 40000,
+      '3v3': 40000,
     })
   })
 })

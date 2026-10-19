@@ -81,6 +81,23 @@ export class AdminPage {
     await this.page.waitForURL(`/players/${steamId}`)
   }
 
+  async resetPlayerSkill(steamId: string) {
+    await this.page.goto(`/players/${steamId}`)
+    await this.openToolbox()
+    // hx-confirm opens a native confirm() dialog.
+    this.page.once('dialog', dialog => dialog.accept())
+    await Promise.all([
+      this.page.waitForResponse(
+        resp =>
+          resp.url().includes(`/players/${steamId}/edit/skill`) &&
+          resp.request().method() === 'DELETE' &&
+          resp.status() === 200,
+      ),
+      this.page.getByTitle('Reset').click(),
+    ])
+    await expect(this.page.getByText('This player has no skill assigned')).toBeVisible()
+  }
+
   async playerCooldown(steamId: string) {
     await this.page.goto(`/players/${steamId}`)
     await this.openToolbox()
@@ -119,17 +136,20 @@ export class AdminPage {
   }
 
   async configurePlayerSkillThreshold(threshold: number | null) {
+    const queue = getQueueConfig()
     await this.page.goto('/admin/player-restrictions')
     await this.page
-      .getByLabel('Player skill threshold', { exact: true })
-      .setChecked(threshold !== null)
+      .locator(`#playerSkillThresholdEnabled\\.${queue}`)
+      .setChecked(threshold !== null, { force: true, timeout: secondsToMilliseconds(10) })
     if (threshold !== null) {
       await this.page
-        .getByLabel('Player skill threshold value', { exact: true })
-        .fill(threshold.toString())
+        .locator(`#playerSkillThreshold\\.${queue}`)
+        .fill(threshold.toString(), { timeout: secondsToMilliseconds(10) })
     }
 
-    await this.page.getByRole('button', { name: 'Save' }).click()
+    await this.page
+      .getByRole('button', { name: 'Save' })
+      .click({ timeout: secondsToMilliseconds(10) })
     await expect(this.page.getByText('Configuration saved')).toBeVisible()
   }
 
@@ -138,8 +158,10 @@ export class AdminPage {
     await this.page.goto('/admin/player-restrictions')
     await this.page
       .locator(`#requirePlayerVerification\\.${queue}`)
-      .setChecked(enabled, { force: true })
-    await this.page.getByRole('button', { name: 'Save' }).click()
+      .setChecked(enabled, { force: true, timeout: secondsToMilliseconds(10) })
+    await this.page
+      .getByRole('button', { name: 'Save' })
+      .click({ timeout: secondsToMilliseconds(10) })
     await expect(this.page.getByText('Configuration saved')).toBeVisible()
   }
 
