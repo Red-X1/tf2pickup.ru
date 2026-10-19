@@ -42,7 +42,7 @@ beforeEach(() => {
   vi.mocked(collections.tasks.insertOne).mockResolvedValue({ insertedId, acknowledged: true })
   vi.mocked(collections.tasks.findOneAndDelete).mockResolvedValue({
     name: 'games.freePlayer',
-    args: { player: '76561198074409147' },
+    args: { player: '76561198074409147', gameNumber: 1 },
   })
 })
 
@@ -54,22 +54,28 @@ afterEach(() => {
 
 describe('schedule()', () => {
   it('should persist the task', async () => {
-    await schedule('games.freePlayer', 5000, { player: '76561198074409147' as SteamId64 })
+    await schedule('games.freePlayer', 5000, {
+      player: '76561198074409147' as SteamId64,
+      gameNumber: 1 as GameNumber,
+    })
     expect(collections.tasks.insertOne).toHaveBeenCalledWith({
       name: 'games.freePlayer',
       at: new Date(now.getTime() + 5000),
-      args: { player: '76561198074409147' },
+      args: { player: '76561198074409147', gameNumber: 1 },
     })
   })
 
   it('should run the task when its timer fires', async () => {
-    await schedule('games.freePlayer', 5000, { player: '76561198074409147' as SteamId64 })
+    await schedule('games.freePlayer', 5000, {
+      player: '76561198074409147' as SteamId64,
+      gameNumber: 1 as GameNumber,
+    })
     expect(handler).not.toHaveBeenCalled()
 
     await vi.advanceTimersByTimeAsync(5000)
 
     expect(collections.tasks.findOneAndDelete).toHaveBeenCalledWith({ _id: insertedId })
-    expect(handler).toHaveBeenCalledWith({ player: '76561198074409147' })
+    expect(handler).toHaveBeenCalledWith({ player: '76561198074409147', gameNumber: 1 })
     expect(scheduledTaskTimers.has(insertedId.toString())).toBe(false)
   })
 

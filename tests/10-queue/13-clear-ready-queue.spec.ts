@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test'
 import { minutesToMilliseconds, secondsToMilliseconds } from 'date-fns'
 import { delay } from 'es-toolkit'
 import { expect, launchGame as test } from '../fixtures/launch-game'
+import { queueIds } from '../../src/queue/types/queue-id'
 
 const readyUpTimeout = secondsToMilliseconds(20)
 const keys = ['queue.ready_up_timeout', 'queue.ready_state_timeout'] as const
@@ -22,7 +23,7 @@ async function configure(page: Page, key: string, value: string) {
 }
 
 function perQueueValue(value: number): string {
-  return JSON.stringify({ '6v6': value, '9v9': value, ultiduo: value })
+  return JSON.stringify(Object.fromEntries(queueIds.map(queue => [queue, value])))
 }
 
 let saved: string[] = []
@@ -36,13 +37,16 @@ test.beforeEach(async ({ users }) => {
 })
 
 test.afterEach(async ({ users }) => {
+  if (saved.length !== keys.length) {
+    return // beforeEach never ran (the auto fixture failed first), nothing was changed
+  }
   const page = await users.getAdmin().page()
   for (const [i, key] of keys.entries()) {
     await configure(page, key, saved[i]!)
   }
 })
 
-test('a queue cleared while readying up starts its next ready-up afresh @6v6 @9v9', async ({
+test('a queue cleared while readying up starts its next ready-up afresh @6v6 @9v9 @4v4 @3v3', async ({
   players,
   desiredSlots,
   users,

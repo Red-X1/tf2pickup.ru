@@ -2,7 +2,7 @@ import { secondsToMilliseconds } from 'date-fns'
 import { expect, authUsers as test } from '../fixtures/auth-users'
 import { delay } from 'es-toolkit'
 
-test('tracks online players @6v6 @9v9', async ({ page, users }) => {
+test('tracks online players @6v6 @9v9 @4v4 @3v3', async ({ page, users }) => {
   await page.goto('/')
   const onlinePlayerList = page.locator('#online-player-list')
   await expect(onlinePlayerList.getByRole('link', { name: 'Blacklight' })).not.toBeVisible({
@@ -21,8 +21,8 @@ test('tracks online players @6v6 @9v9', async ({ page, users }) => {
   })
 })
 
-test.describe('when user opens a new tab and then closes it @6v6 @9v9', () => {
-  test('should keep them online @6v6 @9v9', async ({ page, users }) => {
+test.describe('when user opens a new tab and then closes it @6v6 @9v9 @4v4 @3v3', () => {
+  test('should keep them online @6v6 @9v9 @4v4 @3v3', async ({ page, users }) => {
     await page.goto('/')
     const onlinePlayerList = page.locator('#online-player-list')
     const blacklight = users.byName('Blacklight')

@@ -3,7 +3,7 @@ import { expect, launchGame } from '../fixtures/launch-game'
 
 launchGame.use({ waitForStage: 'launching' })
 
-launchGame('reinitialize game server @6v6 @9v9', async ({ users, gameNumber }) => {
+launchGame('reinitialize game server @6v6 @9v9 @4v4 @3v3', async ({ users, gameNumber }) => {
   const admin = users.getAdmin()
   const page = await admin.gamePage(gameNumber)
   await page.goto()

@@ -4,19 +4,22 @@ import { configureMumbleServer } from '../fixtures/configure-mumble-server'
 
 const test = mergeTests(launchGame, configureMumbleServer)
 
-test('renders join voice button @6v6 @9v9', async ({
+test('renders join voice button @6v6 @9v9 @4v4 @3v3', async ({
   gameNumber,
-  users,
+  players,
   mumbleConfiguration,
   mumbleClient,
 }) => {
-  const page = await users.byName('Astropower').gamePage(gameNumber)
+  const rosterPlayer = players.at(-1)!
+  const page = await rosterPlayer.gamePage(gameNumber)
 
   const joinVoiceButton = page.joinVoiceButton()
   await expect(joinVoiceButton).toBeVisible()
   await expect(joinVoiceButton).toHaveAttribute(
     'href',
-    new RegExp(`mumble://Astropower@.+/${mumbleConfiguration.channelName}/${gameNumber}/(RED|BLU)`),
+    new RegExp(
+      `mumble://${rosterPlayer.playerName}@.+/${mumbleConfiguration.channelName}/${gameNumber}/(RED|BLU)`,
+    ),
   )
 
   expect(

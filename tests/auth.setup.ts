@@ -34,6 +34,10 @@ setup('authenticate', async ({ browser, db }) => {
         $unset: {
           activeGame: 1,
           skill: 1,
+          // start each run pristine: failed runs can leak these
+          chatMutes: 1,
+          bans: 1,
+          verified: 1,
         },
       },
       {
@@ -54,7 +58,7 @@ setup('authenticate', async ({ browser, db }) => {
         const context = await browser.newContext()
         const page = await context.newPage()
         await page.goto(`/auth/test?steamId=${steamId}`)
-        await page.waitForURL(/\/(6v6|9v9|ultiduo)$/)
+        await page.waitForURL(/\/(6v6|9v9|ultiduo|4v4|3v3)$/)
         await page.context().storageState({ path })
       }),
   )

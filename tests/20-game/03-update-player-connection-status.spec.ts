@@ -3,7 +3,7 @@ import { secondsToMilliseconds } from 'date-fns'
 
 launchGame.use({ waitForStage: 'launching' })
 launchGame(
-  'update player connection status @6v6 @9v9',
+  'update player connection status @6v6 @9v9 @4v4 @3v3',
   async ({ players, gameNumber, gameServer }) => {
     const batchSize = 3
     for (let i = 0; i < players.length; i += batchSize) {

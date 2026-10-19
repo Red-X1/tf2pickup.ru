@@ -5,7 +5,7 @@ import { delay } from 'es-toolkit'
 import { queueSlots, getQueueConfig } from '../queue-slots'
 
 test.use({ waitForStage: 'launching' })
-test('free players when the game ends @6v6 @9v9', async ({
+test('free players when the game ends @6v6 @9v9 @4v4 @3v3', async ({
   players,
   gameServer,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -28,14 +28,41 @@ const classes9v9 = [
 ]
 
 const classesUltiduo = [
+  { name: 'soldier', count: 2 },
+  { name: 'medic', count: 2 },
+]
+
+const classes4v4 = [
+  { name: 'scout', count: 2 },
+  { name: 'soldier', count: 2 },
+  { name: 'demoman', count: 2 },
+  { name: 'medic', count: 2 },
+]
+
+const classes3v3 = [
   { name: 'scout', count: 2 },
   { name: 'soldier', count: 2 },
   { name: 'medic', count: 2 },
 ]
 
+const classesByQueue: Record<QueueId, { name: string; count: number }[]> = {
+  '6v6': classes6v6,
+  '9v9': classes9v9,
+  ultiduo: classesUltiduo,
+  '4v4': classes4v4,
+  '3v3': classes3v3,
+}
+
+const playerCountByQueue: Record<QueueId, number> = {
+  '6v6': 12,
+  '9v9': 18,
+  ultiduo: 4,
+  '4v4': 8,
+  '3v3': 6,
+}
+
 export function* queueSlots(queue: QueueId = '6v6'): Generator<SlotId> {
-  const classes = queue === '9v9' ? classes9v9 : queue === 'ultiduo' ? classesUltiduo : classes6v6
-  for (const gc of classes) {
+  for (const gc of classesByQueue[queue]) {
     for (let i = 1; i <= gc.count; ++i) {
       yield `${gc.name}-${i}` as SlotId
     }
@@ -43,13 +70,7 @@ export function* queueSlots(queue: QueueId = '6v6'): Generator<SlotId> {
 }
 
 export function getPlayerCount(queue: QueueId = '6v6'): number {
-  if (queue === '9v9') {
-    return 18
-  }
-  if (queue === 'ultiduo') {
-    return 6
-  }
-  return 12
+  return playerCountByQueue[queue]
 }
 
 export function getQueueConfig(queue?: QueueId): QueueId {

@@ -3,7 +3,7 @@ import { launchGame as test } from '../fixtures/launch-game'
 
 test.use({ waitForStage: 'started' })
 
-test('banned players do not see the take-substitute-spot button @6v6 @9v9', async ({
+test('banned players do not see the take-substitute-spot button @6v6 @9v9 @4v4 @3v3', async ({
   gameNumber,
   users,
 }) => {

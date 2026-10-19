@@ -1,7 +1,7 @@
 import { expect, launchGame as test } from '../fixtures/launch-game'
 
 test.use({ waitForStage: 'started' })
-test('disable game page admin buttons after the game ends @6v6 @9v9', async ({
+test('disable game page admin buttons after the game ends @6v6 @9v9 @4v4 @3v3', async ({
   users,
   gameNumber,
   gameServer,

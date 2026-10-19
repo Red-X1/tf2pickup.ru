@@ -241,7 +241,8 @@ async function* compileConfig(game: GameModel, password: string): AsyncGenerator
     yield `exec ${map.execConfig}`
   }
 
-  const whitelistId = await configuration.get('games.whitelist_id')
+  const whitelistIds = await configuration.get('games.whitelist_id')
+  const whitelistId = whitelistIds[game.queue]
   if (whitelistId !== null) {
     yield `tftrue_whitelist_id ${whitelistId}`
   }
@@ -263,8 +264,8 @@ async function* compileConfig(game: GameModel, password: string): AsyncGenerator
     yield `logstf_autoupload 0`
   }
 
-  const extraCommands = await configuration.get('games.execute_extra_commands')
-  for (const command of extraCommands) {
+  const extraCommandsByQueue = await configuration.get('games.execute_extra_commands')
+  for (const command of extraCommandsByQueue[game.queue].filter(command => command.length > 0)) {
     yield command as RconCommand
   }
 }

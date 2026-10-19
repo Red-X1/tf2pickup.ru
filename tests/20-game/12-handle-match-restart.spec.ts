@@ -3,7 +3,7 @@ import { GamePage } from '../pages/game.page'
 
 test.use({ waitForStage: 'started' })
 
-test('handles match restart @6v6 @9v9', async ({ page, gameNumber, gameServer }) => {
+test('handles match restart @6v6 @9v9 @4v4 @3v3', async ({ page, gameNumber, gameServer }) => {
   const gamePage = new GamePage(page, gameNumber)
   await gamePage.goto()
 

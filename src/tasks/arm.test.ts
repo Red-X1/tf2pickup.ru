@@ -37,7 +37,7 @@ function makeTask(at: Date) {
     _id: new ObjectId(),
     name: 'games.freePlayer' as const,
     at,
-    args: { player: '76561198074409147' },
+    args: { player: '76561198074409147', gameNumber: 1 },
   }
 }
 
@@ -49,7 +49,7 @@ beforeEach(() => {
   scheduledTaskTimers.clear()
   vi.mocked(collections.tasks.findOneAndDelete).mockResolvedValue({
     name: 'games.freePlayer',
-    args: { player: '76561198074409147' },
+    args: { player: '76561198074409147', gameNumber: 1 },
   })
 })
 
@@ -74,7 +74,7 @@ describe('arm()', () => {
     await vi.advanceTimersByTimeAsync(5000)
 
     expect(collections.tasks.findOneAndDelete).toHaveBeenCalledWith({ _id: task._id })
-    expect(handler).toHaveBeenCalledWith({ player: '76561198074409147' })
+    expect(handler).toHaveBeenCalledWith({ player: '76561198074409147', gameNumber: 1 })
     expect(scheduledTaskTimers.has(task._id.toString())).toBe(false)
     expect(taskExecutionCount.add).toHaveBeenCalledWith(1, {
       name: 'games.freePlayer',
@@ -87,7 +87,7 @@ describe('arm()', () => {
     arm(task)
 
     await vi.advanceTimersByTimeAsync(0)
-    expect(handler).toHaveBeenCalledWith({ player: '76561198074409147' })
+    expect(handler).toHaveBeenCalledWith({ player: '76561198074409147', gameNumber: 1 })
   })
 
   it('should not run the task when it was already claimed', async () => {

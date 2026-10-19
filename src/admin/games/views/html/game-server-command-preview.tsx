@@ -4,7 +4,6 @@ import { LogsTfUploadMethod } from '../../../../shared/types/logs-tf-upload-meth
 
 // keep in sync with compileConfig() in src/games/rcon/configure.ts
 export function GameServerCommandPreview(props: {
-  whitelistId: string | null
   executeExtraCommands: string[]
   logsTfUploadMethod: LogsTfUploadMethod
 }) {
@@ -23,13 +22,10 @@ export function GameServerCommandPreview(props: {
         exec <Placeholder text="map config" />{' '}
         <Comment text="only if the map has a config assigned" />
       </span>
-      {props.whitelistId ? (
-        <span safe>tftrue_whitelist_id {props.whitelistId}</span>
-      ) : (
-        <span class="italic opacity-40">
-          <Comment text="tftrue_whitelist_id skipped - no whitelist ID set" />
-        </span>
-      )}
+      <span>
+        tftrue_whitelist_id <Placeholder text="whitelist id" />{' '}
+        <Comment text="per queue; skipped if no whitelist ID is set for the game's queue" />
+      </span>
       <span>
         sv_password <Placeholder text="generated password" />
       </span>

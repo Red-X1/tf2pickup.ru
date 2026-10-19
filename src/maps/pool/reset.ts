@@ -87,6 +87,50 @@ export const defaultMapPools: Record<QueueId, DefaultMapPoolEntry[]> = {
       execConfig: 'etf2l_ultiduo',
     },
   ],
+  '4v4': [
+    {
+      name: 'koth_bagel_rc12',
+      execConfig: 'ugc_4v_koth',
+    },
+    {
+      name: 'koth_clearcut_b18',
+      execConfig: 'ugc_4v_koth',
+    },
+    {
+      name: 'koth_product_final',
+      execConfig: 'ugc_4v_koth',
+    },
+  ],
+  '3v3': [
+    {
+      name: 'ultitrio_caffapro_b6',
+      execConfig: 'ultitrio_match',
+    },
+    {
+      name: 'ultitrio_bound_rc1b',
+      execConfig: 'ultitrio_match',
+    },
+    {
+      name: 'ultitrio_aesthetic_b9',
+      execConfig: 'ultitrio_match',
+    },
+    {
+      name: 'ultitrio_staten_rc1',
+      execConfig: 'ultitrio_match',
+    },
+    {
+      name: 'ultitrio_dockport_final6',
+      execConfig: 'ultitrio_match',
+    },
+    {
+      name: 'ultitrio_eruption_v6',
+      execConfig: 'ultitrio_match',
+    },
+    {
+      name: 'ulti_fira_b2a',
+      execConfig: 'ultitrio_match',
+    },
+  ],
 }
 
 export async function reset(queue: QueueId): Promise<MapPoolEntry[]> {

@@ -87,7 +87,7 @@ describe('when ATLAS_SECRET is set', () => {
       name: 'tf2pickup.pl',
       version: '1.2.3',
       queue: {
-        configs: ['6v6', '9v9', 'ultiduo'],
+        configs: ['6v6', '9v9', 'ultiduo', '4v4', '3v3'],
         occupied: 7,
         capacity: 12,
       },

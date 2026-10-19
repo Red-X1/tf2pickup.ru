@@ -13,6 +13,14 @@ export async function forceEnd(
   actor?: SteamId64 | Bot,
   reason = GameEndedReason.interrupted,
 ) {
+  const existing = await collections.games.findOne(
+    { number: gameNumber },
+    { projection: { state: 1 } },
+  )
+  if (existing?.state === GameState.ended || existing?.state === GameState.interrupted) {
+    // already over: don't append duplicate "ended" events or log the force-end twice
+    return
+  }
   await collections.gamesSubstituteRequests.deleteMany({ gameNumber })
   const game = await update(
     {

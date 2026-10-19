@@ -26,7 +26,7 @@ import { measureTime } from '../../utils/measure-time'
 export default fp(
   // eslint-disable-next-line @typescript-eslint/require-await
   async app => {
-    async function refreshTakenSlots(actorId: SteamId64) {
+    async function refreshTakenSlots(queue: QueueId, actorId: SteamId64) {
       const actor = await players.bySteamId(actorId, [
         'steamId',
         'bans',
@@ -35,7 +35,9 @@ export default fp(
         'verified',
         'roles',
       ])
-      const slots = await collections.queueSlots.find({ player: { $ne: null } }).toArray()
+      // slot ids repeat across queue modes — only the current queue's slots
+      // may be id-swapped into the player's page
+      const slots = await collections.queueSlots.find({ queue, player: { $ne: null } }).toArray()
       app.gateway
         .to({ player: actorId })
         .send(() => Promise.all(slots.map(slot => QueueSlot({ slot, actor }))))
@@ -93,7 +95,7 @@ export default fp(
         const queue = queueOf(socket)
         const slots = await join(queue, slotId, socket.player.steamId)
         if (slots.find(s => s.canMakeFriendsWith?.length)) {
-          await refreshTakenSlots(socket.player.steamId)
+          await refreshTakenSlots(queue, socket.player.steamId)
         }
 
         app.gateway
@@ -112,7 +114,7 @@ export default fp(
         const queue = (queueParam as QueueId | undefined) ?? queueOf(socket)
         const slot = await leave(queue, socket.player.steamId)
         if (slot.canMakeFriendsWith?.length) {
-          await refreshTakenSlots(socket.player.steamId)
+          await refreshTakenSlots(queue, socket.player.steamId)
         }
 
         app.gateway

@@ -13,7 +13,7 @@ launchGame.use({ waitForStage: 'launching' })
 // post-stalemate Round_Start must not be mistaken for the doubled Round_Start
 // of a match restart.
 launchGame(
-  'does not mistake stalemate rounds for a match restart @6v6 @9v9',
+  'does not mistake stalemate rounds for a match restart @6v6 @9v9 @4v4 @3v3',
   async ({ gameNumber, page, gameServer }) => {
     const gamePage = new GamePage(page, gameNumber)
     await gamePage.goto()

@@ -27,6 +27,7 @@ export const tasksSchema = z.discriminatedUnion('name', [
     name: z.literal('games.freePlayer'),
     args: z.object({
       player: steamId64,
+      gameNumber,
     }),
   }),
   z.object({

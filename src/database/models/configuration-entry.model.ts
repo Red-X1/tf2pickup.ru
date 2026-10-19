@@ -12,6 +12,8 @@ const perQueue = <T extends z.ZodType>(value: T) =>
     '6v6': value,
     '9v9': value,
     ultiduo: value,
+    '4v4': value,
+    '3v3': value,
   })
 
 export const configurationSchema = z.discriminatedUnion('key', [
@@ -104,7 +106,13 @@ export const configurationSchema = z.discriminatedUnion('key', [
   }),
   z.object({
     key: z.literal('games.whitelist_id'),
-    value: z.string().nullable().default(null),
+    value: perQueue(z.string().nullable()).default({
+      '6v6': null,
+      '9v9': null,
+      ultiduo: null,
+      '4v4': null,
+      '3v3': null,
+    }),
   }),
   z
     .object({
@@ -121,9 +129,15 @@ export const configurationSchema = z.discriminatedUnion('key', [
   z
     .object({
       key: z.literal('games.execute_extra_commands'),
-      value: z.array(z.string()).default([]),
+      value: perQueue(z.array(z.string())).default(() => ({
+        '6v6': [],
+        '9v9': [],
+        ultiduo: [],
+        '4v4': [],
+        '3v3': [],
+      })),
     })
-    .describe('Execute extra commands via rcon upon configuring the game'),
+    .describe('Execute extra commands via rcon upon configuring the game, per queue'),
   z
     .object({
       key: z.literal('games.logs_tf_upload_method'),
@@ -230,7 +244,13 @@ export const configurationSchema = z.discriminatedUnion('key', [
   }),
   z.object({
     key: z.literal('queue.player_skill_threshold'),
-    value: perQueue(z.number().nullable()).default({ '6v6': null, '9v9': null, ultiduo: null }),
+    value: perQueue(z.number().nullable()).default({
+      '6v6': null,
+      '9v9': null,
+      ultiduo: null,
+      '4v4': null,
+      '3v3': null,
+    }),
   }),
   z
     .object({
@@ -239,6 +259,8 @@ export const configurationSchema = z.discriminatedUnion('key', [
         '6v6': secondsToMilliseconds(40),
         '9v9': secondsToMilliseconds(40),
         ultiduo: secondsToMilliseconds(40),
+        '4v4': secondsToMilliseconds(40),
+        '3v3': secondsToMilliseconds(40),
       })),
     })
     .describe('Time players have to ready up before they are kicked out of the queue'),
@@ -249,6 +271,8 @@ export const configurationSchema = z.discriminatedUnion('key', [
         '6v6': secondsToMilliseconds(60),
         '9v9': secondsToMilliseconds(60),
         ultiduo: secondsToMilliseconds(60),
+        '4v4': secondsToMilliseconds(60),
+        '3v3': secondsToMilliseconds(60),
       })),
     })
     .describe(
@@ -257,12 +281,24 @@ export const configurationSchema = z.discriminatedUnion('key', [
   z
     .object({
       key: z.literal('queue.map_cooldown'),
-      value: perQueue(z.number().positive()).default({ '6v6': 2, '9v9': 2, ultiduo: 2 }),
+      value: perQueue(z.number().positive()).default({
+        '6v6': 2,
+        '9v9': 2,
+        ultiduo: 2,
+        '4v4': 2,
+        '3v3': 2,
+      }),
     })
     .describe('How many times the last played map cannot be an option to vote for'),
   z.object({
     key: z.literal('queue.require_player_verification'),
-    value: perQueue(z.boolean()).default({ '6v6': false, '9v9': false, ultiduo: false }),
+    value: perQueue(z.boolean()).default({
+      '6v6': false,
+      '9v9': false,
+      ultiduo: false,
+      '4v4': false,
+      '3v3': false,
+    }),
   }),
   z.object({
     key: z.literal('queue.pre_ready_up_timeout'),
@@ -270,6 +306,8 @@ export const configurationSchema = z.discriminatedUnion('key', [
       '6v6': minutesToMilliseconds(5),
       '9v9': minutesToMilliseconds(5),
       ultiduo: minutesToMilliseconds(5),
+      '4v4': minutesToMilliseconds(5),
+      '3v3': minutesToMilliseconds(5),
     })),
   }),
   z

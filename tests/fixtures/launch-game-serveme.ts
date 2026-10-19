@@ -5,7 +5,7 @@ import { waitForEmptyQueue } from './wait-for-empty-queue'
 import { GamePage } from '../pages/game.page'
 import { minutesToMilliseconds } from 'date-fns'
 import { getPlayerCount, getQueueConfig, type SlotId } from '../queue-slots'
-import { desiredSlots6v6, desiredSlots9v9 } from './launch-game'
+import { desiredSlotsByQueue } from './launch-game'
 
 export { expect }
 
@@ -32,7 +32,7 @@ export const launchGameServeme = mergeTests(authUsers, waitForEmptyQueue).extend
   waitForStage: ['launching', { option: true }],
 
   desiredSlots: async ({}, use) => {
-    const slots = getQueueConfig() === '9v9' ? desiredSlots9v9 : desiredSlots6v6
+    const slots = desiredSlotsByQueue[getQueueConfig()]
     await use(new Map<UserName, SlotId>(slots))
   },
   players: async ({ users, desiredSlots }, use) => {

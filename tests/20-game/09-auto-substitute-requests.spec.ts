@@ -2,16 +2,17 @@ import { secondsToMilliseconds } from 'date-fns'
 import { GamePage } from '../pages/game.page'
 import { expect } from '@playwright/test'
 import { launchGame as test } from '../fixtures/launch-game'
+import type { UserContext } from '../user-manager'
 
-test.use({ waitForStage: 'launching' })
+test.use({ waitForStage: 'launching', autoSubstitute: true })
 
 test.beforeEach(async ({ users }) => {
   const page = await users.getAdmin().adminPage()
   await page.configureGames({ joinGameServerTimeout: 10, rejoinGameServerTimeout: 5 })
 })
 
-test.describe('when a player does not connect to the gameserver on time @6v6 @9v9', () => {
-  test('should request substitute for them @6v6 @9v9', async ({
+test.describe('when a player does not connect to the gameserver on time @6v6 @9v9 @4v4 @3v3', () => {
+  test('should request substitute for them @6v6 @9v9 @4v4 @3v3', async ({
     gameNumber,
     page,
     gameServer,
@@ -19,7 +20,8 @@ test.describe('when a player does not connect to the gameserver on time @6v6 @9v
   }) => {
     const gamePage = new GamePage(page, gameNumber)
     await gamePage.goto()
-    const connectingPlayers = players.filter(user => user.playerName !== 'BellBoy')
+    const offlinePlayer = offlinePlayerFrom(players)
+    const connectingPlayers = players.filter(user => user !== offlinePlayer)
 
     await Promise.all(
       connectingPlayers.map(async user => {
@@ -29,18 +31,24 @@ test.describe('when a player does not connect to the gameserver on time @6v6 @9v
     )
 
     await expect
-      .poll(() => gamePage.slot('BellBoy').status(), { timeout: secondsToMilliseconds(15) })
+      .poll(() => gamePage.slot(offlinePlayer.playerName).status(), {
+        timeout: secondsToMilliseconds(15),
+      })
       .toBe('waiting for substitute')
 
     await expect(
-      gamePage.gameEvent(/bot requested substitute for.+BellBoy \(reason: Player is offline\)/),
+      gamePage.gameEvent(
+        new RegExp(
+          `bot requested substitute for.+${offlinePlayer.playerName} \\(reason: Player is offline\\)`,
+        ),
+      ),
     ).toBeVisible()
-    await expect(gamePage.playerLink('BellBoy')).not.toBeVisible()
+    await expect(gamePage.playerLink(offlinePlayer.playerName)).not.toBeVisible()
   })
 })
 
-test.describe('when a player connects to the gameserver, but then leaves @6v6 @9v9', () => {
-  test('should request substitute for them @6v6 @9v9', async ({
+test.describe('when a player connects to the gameserver, but then leaves @6v6 @9v9 @4v4 @3v3', () => {
+  test('should request substitute for them @6v6 @9v9 @4v4 @3v3', async ({
     gameNumber,
     page,
     gameServer,
@@ -48,7 +56,8 @@ test.describe('when a player connects to the gameserver, but then leaves @6v6 @9
   }) => {
     const gamePage = new GamePage(page, gameNumber)
     await gamePage.goto()
-    const connectingPlayers = players.filter(user => user.playerName !== 'BellBoy')
+    const offlinePlayer = offlinePlayerFrom(players)
+    const connectingPlayers = players.filter(user => user !== offlinePlayer)
 
     await Promise.all(
       connectingPlayers.map(async user => {
@@ -57,40 +66,58 @@ test.describe('when a player connects to the gameserver, but then leaves @6v6 @9
       }),
     )
 
-    await gameServer.playerConnects('BellBoy')
-    await gameServer.playerDisconnects('BellBoy')
+    await gameServer.playerConnects(offlinePlayer.playerName)
+    await gameServer.playerDisconnects(offlinePlayer.playerName)
 
     await expect
-      .poll(() => gamePage.slot('BellBoy').status(), { timeout: secondsToMilliseconds(15) })
+      .poll(() => gamePage.slot(offlinePlayer.playerName).status(), {
+        timeout: secondsToMilliseconds(15),
+      })
       .toBe('waiting for substitute')
 
     await expect(
-      gamePage.gameEvent(/bot requested substitute for.+BellBoy \(reason: Player is offline\)/),
+      gamePage.gameEvent(
+        new RegExp(
+          `bot requested substitute for.+${offlinePlayer.playerName} \\(reason: Player is offline\\)`,
+        ),
+      ),
     ).toBeVisible()
-    await expect(gamePage.playerLink('BellBoy')).not.toBeVisible()
+    await expect(gamePage.playerLink(offlinePlayer.playerName)).not.toBeVisible()
   })
 })
 
-test.describe('when the match starts, but then a player leaves @6v6 @9v9', () => {
-  test('should request substitute for them @6v6 @9v9', async ({ gameNumber, page, gameServer }) => {
+test.describe('when the match starts, but then a player leaves @6v6 @9v9 @4v4 @3v3', () => {
+  test('should request substitute for them @6v6 @9v9 @4v4 @3v3', async ({
+    gameNumber,
+    page,
+    gameServer,
+    players,
+  }) => {
     const gamePage = new GamePage(page, gameNumber)
     await gamePage.goto()
+    const offlinePlayer = offlinePlayerFrom(players)
 
     await gameServer.connectAllPlayers()
     await gameServer.matchStarts()
 
-    await gameServer.playerDisconnects('BellBoy')
+    await gameServer.playerDisconnects(offlinePlayer.playerName)
     await expect
-      .poll(() => gamePage.slot('BellBoy').status(), { timeout: secondsToMilliseconds(15) })
+      .poll(() => gamePage.slot(offlinePlayer.playerName).status(), {
+        timeout: secondsToMilliseconds(15),
+      })
       .toBe('waiting for substitute')
     await expect(
-      gamePage.gameEvent(/bot requested substitute for.+BellBoy \(reason: Player is offline\)/),
+      gamePage.gameEvent(
+        new RegExp(
+          `bot requested substitute for.+${offlinePlayer.playerName} \\(reason: Player is offline\\)`,
+        ),
+      ),
     ).toBeVisible()
-    await expect(gamePage.playerLink('BellBoy')).not.toBeVisible()
+    await expect(gamePage.playerLink(offlinePlayer.playerName)).not.toBeVisible()
   })
 })
 
-test.describe('when a player replaces another player and does not join the gameserver @6v6 @9v9', () => {
+test.describe('when a player replaces another player and does not join the gameserver @6v6 @9v9 @4v4 @3v3', () => {
   let adminsPage: GamePage
   let ghostWalkersPage: GamePage
   let gamePage: GamePage
@@ -108,14 +135,14 @@ test.describe('when a player replaces another player and does not join the games
     await gameServer.connectAllPlayers()
   })
 
-  test.describe('before the match starts @6v6 @9v9', () => {
+  test.describe('before the match starts @6v6 @9v9 @4v4 @3v3', () => {
     test.beforeEach(async ({ gameServer }) => {
       await adminsPage.requestSubstitute('Mayflower')
       await ghostWalkersPage.replacePlayer('Mayflower')
       await gameServer.playerDisconnects('Mayflower')
     })
 
-    test('should request substitute for them @6v6 @9v9', async () => {
+    test('should request substitute for them @6v6 @9v9 @4v4 @3v3', async () => {
       await expect
         .poll(() => gamePage.slot('GhostWalker').status(), { timeout: secondsToMilliseconds(15) })
         .toBe('waiting for substitute')
@@ -127,7 +154,7 @@ test.describe('when a player replaces another player and does not join the games
     })
   })
 
-  test.describe('after the match starts @6v6 @9v9', () => {
+  test.describe('after the match starts @6v6 @9v9 @4v4 @3v3', () => {
     test.beforeEach(async ({ gameServer }) => {
       await gameServer.matchStarts()
 
@@ -136,7 +163,7 @@ test.describe('when a player replaces another player and does not join the games
       await gameServer.playerDisconnects('Mayflower')
     })
 
-    test('should request substitute for them @6v6 @9v9', async () => {
+    test('should request substitute for them @6v6 @9v9 @4v4 @3v3', async () => {
       await expect
         .poll(() => gamePage.slot('GhostWalker').status(), { timeout: secondsToMilliseconds(15) })
         .toBe('waiting for substitute')
@@ -148,3 +175,11 @@ test.describe('when a player replaces another player and does not join the games
     })
   })
 })
+
+function offlinePlayerFrom(players: UserContext[]): UserContext {
+  const player = players.at(-1)
+  if (player === undefined) {
+    throw new Error('no players in the game')
+  }
+  return player
+}
